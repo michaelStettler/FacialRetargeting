@@ -1,6 +1,15 @@
+import numpy as np
+
 def compute_delta(data, ref):
+    """
+    compute the delta between a vector data and a ref vector
+
+    :param data:
+    :param ref:
+    :return:
+    """
     deltas = []
     for d in data:
-        deltas.append(d - ref)
+        deltas.append(d - ref)  # todo in matrix form...
 
-    return deltas
+    return np.array(deltas)

@@ -81,26 +81,28 @@ def load_training_frames(path, num_markers=45, max_num_seq=None):
     for s, seq in enumerate(training_seq):
         tot_frames += np.shape(training_seq[s])[0]
 
-    # declare ak
-    ak = np.zeros((tot_frames, np.shape(training_seq[0])[1], np.shape(training_seq[0])[2]))
-    delta_ak = np.zeros((tot_frames, np.shape(training_seq[0])[1], np.shape(training_seq[0])[2]))
+    # declare af and detla_af
+    af = np.zeros((tot_frames, np.shape(training_seq[0])[1], np.shape(training_seq[0])[2]))
+    delta_af = np.zeros((tot_frames - len(training_seq), np.shape(training_seq[0])[1], np.shape(training_seq[0])[2]))  # remove k=0
 
     # merge all seq into one tensor and compute deltas
     iterator = 0
+    delta_iterator = 0
     for s, seq in enumerate(training_seq):
         shape_seq = np.shape(seq)
         # compute deltas
         deltas = compute_delta(seq, seq[0])
 
         # merge data
-        ak[iterator:(iterator+shape_seq[0])] = seq
-        delta_ak[iterator:(iterator+shape_seq[0])] = deltas
+        af[iterator:(iterator+shape_seq[0])] = seq
+        delta_af[delta_iterator:(delta_iterator+shape_seq[0]-1)] = deltas[1:]  # remove delta0
 
         # iterate num frames
         iterator += shape_seq[0]
+        delta_iterator += shape_seq[0] - 1  # remove k=0
 
     print("Finished loading sequences, found a total of", tot_frames, "training frames")
-    return ak, delta_ak
+    return af, delta_af
 
 
 if __name__ == '__main__':
