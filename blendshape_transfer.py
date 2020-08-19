@@ -4,6 +4,7 @@ from load_data import load_training_frames
 from compute_delta import compute_delta
 from re_order_delta import re_order_delta
 from compute_corr_coef import compute_corr_coef
+from compute_corr_coef import compute_tilda_corr_coef
 from compute_trust_values import compute_trust_values
 from plotting import plot_similarities
 
@@ -30,17 +31,19 @@ print("shape delta af:", np.shape(delta_af))
 
 
 # 1) Facial Motion Similarity
+# reorder delta blendshapes
+sorted_delta_sk = re_order_delta(np.reshape(delta_sk, (np.shape(delta_sk)[0], -1)))
+
 # measure similarity between character blendshapes and actor's capture performance
 ckf = compute_corr_coef(np.reshape(delta_af, (np.shape(delta_af)[0], -1)),
-                        np.reshape(delta_sk, (np.shape(delta_sk)[0], -1)))
+                        np.reshape(sorted_delta_sk, (np.shape(delta_sk)[0], -1)))
 print("shape ckf", np.shape(ckf))
 if do_plot:
     plot_similarities(ckf, "Fig. 7: Motion space similarity")
 
 # contrast enhancement
-# reorder delta blenshapes
-sorted_delta_sk = re_order_delta(np.reshape(delta_sk, (np.shape(delta_sk)[0], -1)))
 tk = compute_trust_values(sorted_delta_sk, do_plot=do_plot)
+tilda_ckf = compute_tilda_corr_coef(ckf, tk)
 
 # 2) extract most important frames
 

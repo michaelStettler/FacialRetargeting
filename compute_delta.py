@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def compute_delta(data, ref):
     """
     compute the delta between a vector data and a ref vector
