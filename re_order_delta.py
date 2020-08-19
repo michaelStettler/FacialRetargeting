@@ -28,7 +28,7 @@ if __name__ == '__main__':
     np.random.seed(0)
 
     # test compute trust values
-    delta_sk = np.random.rand(6, 1)  # (k, num_features)
+    delta_sk = np.random.rand(6, 1)  # (k, m)
     print("delta_sk", np.shape(delta_sk))
 
     delta_sk = re_order_delta(delta_sk)

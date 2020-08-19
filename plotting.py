@@ -9,7 +9,6 @@ def plot_similarities(data, title=None, vmin=None, vmax=None):
     sns.heatmap(data, vmin=vmin, vmax=vmax)
     if title is not None:
         plt.title(title)
-    plt.show()
 
 
 def plot_cumulative_correlations(seq, keys):

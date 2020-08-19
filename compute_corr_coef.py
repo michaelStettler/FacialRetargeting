@@ -8,9 +8,10 @@ def compute_corr_coef(da, ds):
 
     f:= number of frames
     k:= number of blendshapes
+    n:= num_features (n_markers*3)
 
-    :param da: delta-actor training sequence (f, n_features)
-    :param ds:  delta-character sparse blendshapes (k, n_features)
+    :param da: delta-actor training sequence (f, n)
+    :param ds:  delta-character sparse blendshapes (k, n)
     :return: correlation coefficients in delta representation
     """
 
@@ -19,7 +20,7 @@ def compute_corr_coef(da, ds):
     s_norm = np.diag(np.power(np.linalg.norm(ds, axis=1), -1))
 
     # compute Pearson Correlation Coefficients
-    return a_norm @ da @ ds.T @ s_norm
+    return np.array(a_norm @ da @ ds.T @ s_norm).T
 
 
 def compute_tilda_corr_coef(ckf, tk, r=15):
@@ -54,8 +55,8 @@ if __name__ == '__main__':
     np.random.seed(0)
     print("------- test compute_corr_coef ----------")
     # test compute_corr_coef with 2 dims array
-    a = np.random.rand(6, 3)  # (f, num_features)
-    s = np.random.rand(4, 3)  # (k, num_features)
+    a = np.random.rand(6, 3)  # (f, n)
+    s = np.random.rand(4, 3)  # (k, n)
     print("f = num_frames, k = num_blendshapes")
     print("shape a", np.shape(a))
     print("shape s", np.shape(s))

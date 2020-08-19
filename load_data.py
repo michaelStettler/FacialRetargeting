@@ -56,7 +56,7 @@ def load_training_frames(path, num_markers=45, max_num_seq=None):
         if file.endswith(".c3d"):
             sequences_list.append(file)
 
-    print("found", len(sequences_list), "sequence")
+    print("found", len(sequences_list), "sequence(s)")
 
     # get all training frames
     print("loading training data...")

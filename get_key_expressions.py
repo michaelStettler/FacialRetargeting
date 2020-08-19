@@ -55,7 +55,7 @@ def get_key_expressions(sequence, ksize=3, theta=1, do_plot=False):
     :param ksize: int parameter to define the size of the 1D Gaussian kernel size
     :param theta: float parameter to define the Gaussian filter
     :param do_plot: option to plot the cumulative correlation as in Fig. 8
-    :return: index of key expressions within sequence
+    :return: key expressions within sequence
     """
     # apply low band filtering over each row
     filtered_seq = get_filt_signals(sequence, ksize, theta)
@@ -69,7 +69,7 @@ def get_key_expressions(sequence, ksize=3, theta=1, do_plot=False):
     if do_plot:
         plot_cumulative_correlations(cumul_seq, key_expressions)
 
-    return key_expressions
+    return sequence[:, key_expressions]
 
 
 if __name__ == '__main__':

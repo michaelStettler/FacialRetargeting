@@ -8,10 +8,11 @@ def compute_trust_values(dsk, do_plot=False):
     Compute trust values following formula 6
 
     k:= number of blendshapes
+    n:= num_features (num_markers*3)
 
-    :param dsk: delta_sk vector (k, num_features)
+    :param dsk: delta_sk vector (k, n)
     :param do_plot: decide if we want to plot the between-correlation matrix
-    :return: trust values vector (k)
+    :return: trust values vector (k,)
     """
     # compute between-blendshape correlation
     ckl = compute_corr_coef(dsk, dsk)
@@ -47,7 +48,7 @@ if __name__ == '__main__':
     from re_order_delta import re_order_delta
 
     # test compute trust values
-    sk = np.random.rand(6, 3)  # (k, num_features)
+    sk = np.random.rand(6, 3)  # (k, n)
     sorted_sk = re_order_delta(sk)
 
     tk = compute_trust_values(sorted_sk, do_plot=False)
