@@ -9,6 +9,7 @@ from compute_trust_values import compute_trust_values
 from get_key_expressions import get_key_expressions
 from get_soft_mask import get_soft_mask
 from EMatch import EMatch
+from RBF_warp import get_initial_actor_blendshapes
 from plotting import plot_similarities
 
 """
@@ -25,6 +26,7 @@ ref_sk = sk[-1]  # neutral pose is the last one
 delta_sk = compute_delta(sk[:-1], ref_sk)
 delta_sk = delta_sk[:25]  # todo remove here to train on all bs!
 af, delta_af = load_training_frames('D:/MoCap_Data/David/NewSession_labeled/', num_markers=45, max_num_seq=max_num_seq)  # actor animation  # todo downsamples freq?
+af = np.delete(af, (38, 39, 40, 44), 1)  # remove HEAD markers
 delta_af = np.delete(delta_af, (38, 39, 40, 44), 1)  # remove HEAD markers
 
 print("Finished loading data")
@@ -58,10 +60,12 @@ print("shape key_expressions", np.shape(key_expressions))
 print()
 
 # 3) Manifold Alignment
-# built uk
+# built soft max vector
 uk = get_soft_mask(delta_sk)
-# get E_match function
+# get 1st energy term: E_match
 e_match_fn = EMatch(tilda_ckf, uk, delta_af).get_ematch()
-e_match_fn("coucou")
 
-# 4) build initial guess blend shape RBF wrap
+# 4) Geometric Constraint
+# build initial guess blendshape using RBF wrap
+gk = get_initial_actor_blendshapes(ref_sk, af[0], delta_sk)
+print("shape gk", np.shape(gk))

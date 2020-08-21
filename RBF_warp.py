@@ -67,16 +67,57 @@ def rbf_warp(p, q):
     return W, A
 
 
+def get_initial_actor_blendshapes(s0, a0, delta_sk):
+    """
+    Compute the initial guess actor blendshapes in delta space as explained in 4.4 Geometric Constraint of the paper
+
+    k:= num_of_blendshapes
+    m:= num_of_markers
+
+    :param s0: neutral character expression
+    :param a0: neutral actor expression
+    :param delta_sk: character blendshapes in delta space
+    :return: initial guess of actor blendshapes
+    """
+    # compute initial transform of neutral pose
+    W, A = rbf_warp(s0, a0)
+    # compute initial guess by transforming each character blendshapes delta_sk
+    K = np.shape(delta_sk)[0]
+    delta_gk = np.zeros(np.shape(delta_sk))
+    for k in range(K):
+        delta_gk[k] = np.multiply(delta_sk[k], W)
+
+    return delta_gk
+
+
 if __name__ == '__main__':
-    n = 5
+    """
+    test the following two functions: 
+        - rbf_warp
+        - get_initial_actor_blendshapes
+        
+    run: python -m RBF_warp
+    """
+    # declare variables
+    m = 5  # num_markers
     np.random.seed(0)
-    p = np.random.rand(n, 3)  # random landmarks population
-    q = np.random.rand(n, 3)  # random target coordinates
-    print("p", np.shape(p))
-    print(p)
-    print("q", np.shape(q))
-    print(q)
-    W, A = rbf_warp(p, q)
+    print("---------- test RBF Warp ----------")
+    # test RBF_warp function
+    s0 = np.random.rand(m, 3)  # random landmarks population
+    a0 = np.random.rand(m, 3)  # random target coordinates
+    print("s0", np.shape(s0))
+    print(s0)
+    print("a0", np.shape(a0))
+    print(a0)
+    W, A = rbf_warp(s0, a0)
     print("shape W, A", np.shape(W), np.shape(A))
     print(W)
     print(A)
+    print()
+
+    print("---------- test RBF Warp ----------")
+    # test get_initial_actor_blendshapes
+    K = 4
+    delta_sk = np.random.rand(K, m, 3)
+    delta_gk = get_initial_actor_blendshapes(s0, a0, delta_sk)
+    print("shape gk", np.shape(delta_gk))
