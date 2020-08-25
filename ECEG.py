@@ -2,6 +2,15 @@ import numpy as np
 from compute_corr_coef import compute_corr_coef
 
 class ECEG:
+    """
+    Construct a class to compute E_CEG as in formula 13 using a function to pass directly the personalized blendshapes
+    in delta space delta_p (dp)
+
+    k:= num_of_blendshapes
+    f:= num_frames
+    m:= num_markers
+    n:= num_features
+    """
 
     def __init__(self, delta_sk):
         self.delta_sk = delta_sk
@@ -9,6 +18,12 @@ class ECEG:
         self.N = np.shape(delta_sk)[1]
 
     def _compute_graph_laplacian(self, dsk):
+        """
+        Compute the Laplacian as formula 12
+
+        :param dsk: (k, n)
+        :return:
+        """
         # get ckl and remove diagonal
         ckl = compute_corr_coef(dsk, dsk)
         np.fill_diagonal(ckl, 0)
@@ -86,3 +101,16 @@ if __name__ == '__main__':
     e_ceg_fn = ECEG(dsk).get_eceg()
     eceg = e_ceg_fn(pk)
     print("eceg =", eceg)
+
+    assert eceg == eceg_ctrl
+    print("emesh values are equal")
+    print()
+
+    print("------------- test decomposition --------------")
+    pk0 = pk[0]
+    print("pk0", np.shape(pk0))
+    print(pk0)
+    print("norm pk0", np.linalg.norm(pk0)**2)
+    test = pk0.T @ np.eye(3) @ pk0
+    print("test", test)
+

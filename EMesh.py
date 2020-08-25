@@ -190,7 +190,7 @@ if __name__ == '__main__':
     print("emesh values are equal")
     print()
 
-    print("------------- Test with Vicon data -------------")
+    print("------------- Test triangulation with Vicon data -------------")
     # test with recorded Vicon
     sk = np.load('data/louise_bs_vrts_pos.npy')  # sparse representation of the blend shapes (vk)
     ref_sk = sk[-1]  # neutral pose is the last one

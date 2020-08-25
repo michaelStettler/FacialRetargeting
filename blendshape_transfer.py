@@ -9,6 +9,8 @@ from compute_trust_values import compute_trust_values
 from get_key_expressions import get_key_expressions
 from get_soft_mask import get_soft_mask
 from EMatch import EMatch
+from EMesh import EMesh
+from ECEG import ECEG
 from RBF_warp import get_initial_actor_blendshapes
 from plotting import plot_similarities
 
@@ -66,6 +68,19 @@ uk = get_soft_mask(delta_sk)
 e_match_fn = EMatch(tilda_ckf, uk, delta_af).get_ematch()
 
 # 4) Geometric Constraint
-# build initial guess blendshape using RBF wrap
-gk = get_initial_actor_blendshapes(ref_sk, af[0], delta_sk)
-print("shape gk", np.shape(gk))
+# build initial guess blendshape using RBF wrap (in delta space)
+delta_gk = get_initial_actor_blendshapes(ref_sk, af[0], delta_sk)
+print("shape delta gk", np.shape(delta_gk))
+e_mesh_fn = EMesh(delta_gk).get_emesh()
+
+# 5) Cross-Expression Constraint (Cross-Expression Graph: CEG)
+e_ceg_fn = ECEG(delta_sk).get_eceg()
+
+
+# 6) Optimization of delta_pk by minimizing E_Align
+# build E_Align function
+def e_align(alpha=0.01, beta=0.1):
+    def e(dp):
+        return e_match_fn(dp) + alpha * e_mesh_fn(dp) + beta * e_ceg_fn(dp)
+    return e
+
