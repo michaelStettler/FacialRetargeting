@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import optimize
 
 from load_data import load_training_frames
 from compute_delta import compute_delta
@@ -13,6 +14,7 @@ from EMesh import EMesh
 from ECEG import ECEG
 from RBF_warp import get_initial_actor_blendshapes
 from plotting import plot_similarities
+
 
 """
 run: python -m blendshape_transfer
@@ -36,11 +38,14 @@ print("shape af, sk:", np.shape(af), np.shape(sk))
 print("shape delta_sk", np.shape(delta_sk))
 print("shape delta af:", np.shape(delta_af))
 print()
+K, M, n_dim = np.shape(delta_sk)
+F = np.shape(delta_af)[0]
 
 
 # 1) Facial Motion Similarity
 # reorder delta blendshapes
 sorted_delta_sk = re_order_delta(np.reshape(delta_sk, (np.shape(delta_sk)[0], -1)))
+print("shape sorted_delta_sk", np.shape(sorted_delta_sk))
 
 # measure similarity between character blendshapes and actor's capture performance
 ckf = compute_corr_coef(np.reshape(delta_af, (np.shape(delta_af)[0], -1)),
@@ -63,9 +68,10 @@ print()
 
 # 3) Manifold Alignment
 # built soft max vector
-uk = get_soft_mask(delta_sk)
+uk = get_soft_mask(delta_sk)  # todo check for uk size!
+print("shape uk", np.shape(uk))
 # get 1st energy term: E_match
-e_match_fn = EMatch(tilda_ckf, uk, delta_af).get_ematch()
+e_match_fn = EMatch(tilda_ckf, uk, np.reshape(delta_af, (F, M*n_dim))).get_ematch()
 
 # 4) Geometric Constraint
 # build initial guess blendshape using RBF wrap (in delta space)
@@ -84,3 +90,9 @@ def e_align(alpha=0.01, beta=0.1):
         return e_match_fn(dp) + alpha * e_mesh_fn(dp) + beta * e_ceg_fn(dp)
     return e
 
+
+pk = np.random.rand(K, M*n_dim)
+print("pk", np.shape(pk))
+print()
+opt = optimize.minimize(e_align(), pk, method="CG")
+print(opt)

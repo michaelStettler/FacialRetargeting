@@ -21,7 +21,7 @@ def get_soft_mask(dskm):
     #get max norm
     max_norm = np.repeat(np.expand_dims(np.amax(norm_dskm, axis=1), axis=1), np.shape(dskm)[1], axis=1)
     # compute soft max
-    return norm_dskm / max_norm
+    return np.reshape(np.repeat(norm_dskm / max_norm, 3), (np.shape(dskm)[0], np.shape(dskm)[1]*np.shape(dskm)[2]))
 
 
 if __name__ == '__main__':
@@ -33,11 +33,11 @@ if __name__ == '__main__':
     np.random.seed(0)
     # declare variables
     n_k = 4
-    n_m = 5
+    n_m = 2
     dsk = np.random.rand(n_k, n_m, 3)  # (k, m, xyz)
 
     # build ukm control using double loops
-    ukm_control = np.zeros((n_k, n_m))
+    ukm_control = np.zeros((n_k, n_m, 3))
     for k in range(n_k):
         # compute max norm
         max_norm = 0
@@ -49,8 +49,10 @@ if __name__ == '__main__':
         # compute ukm
         for m in range(n_m):
             norm_dskm = np.linalg.norm(dsk[k, m])
-            ukm_control[k, m] = norm_dskm / max_norm
-
+            ukm_control[k, m, 0] = norm_dskm / max_norm
+            ukm_control[k, m, 1] = norm_dskm / max_norm
+            ukm_control[k, m, 2] = norm_dskm / max_norm
+    ukm_control = np.reshape(ukm_control, (n_k, n_m*3))
     # test compute_corr_coef with 2 dims array
     ukm = get_soft_mask(dsk)
 
@@ -59,5 +61,5 @@ if __name__ == '__main__':
     print("ukm_control", np.shape(ukm_control))
     print(ukm_control)
 
-    assert (np.around(ukm, 6) == np.around(ukm_control, 6)).all()
+    assert (np.around(ukm, 6).all() == np.around(ukm_control, 6).all())
     print("get_soft_max function works!")
