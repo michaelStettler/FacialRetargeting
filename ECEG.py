@@ -16,6 +16,7 @@ class ECEG:
         self.delta_sk = delta_sk
         self.K = np.shape(delta_sk)[0]
         self.N = np.shape(delta_sk)[1]
+        self.M = int(self.N/3)
 
     def _compute_gl_operator(self, dsk):
         """
@@ -83,7 +84,7 @@ class ECEG:
 
         return np.sum(norm) / self.K
 
-    def get_eceg(self):
+    def get_eCEG(self):
         """
         return the function eceg
         :return:
@@ -95,8 +96,8 @@ if __name__ == '__main__':
 
     np.random.seed(2)
     # declare variables
-    n_k = 3  # num_blendshapes
-    n_m = 1  # num markers
+    n_k = 4  # num_blendshapes
+    n_m = 2  # num markers
     n_n = n_m * 3  # num_features (num_markers * 3)
     dsk = np.random.rand(n_k, n_n)
     pk = np.random.rand(n_k, n_n)
@@ -128,7 +129,7 @@ if __name__ == '__main__':
 
     # compute eCEG
     e_CEG = ECEG(dsk)
-    e_ceg_fn = e_CEG.get_eceg()
+    e_ceg_fn = e_CEG.get_eCEG()
     eceg = e_ceg_fn(pk)
     print("eceg =", eceg)
 
@@ -165,8 +166,8 @@ if __name__ == '__main__':
     print("shape gl_dps", np.shape(gl_dps))
     print(gl_dps)
 
-
     p = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    e_CEG = ECEG(np.random.rand(np.shape(p)[0], np.shape(p)[0]))
     Lp = e_CEG.get_graph_laplacian(p) @ p
     print("Lp")
     print(Lp)
@@ -179,13 +180,26 @@ if __name__ == '__main__':
     print("Lps")
     print(Lps)
     print(Lp - Ls)
+    print()
+
+    print("try solve")
+    from scipy.linalg import solve
+
+    e_CEG = ECEG(dsk)
+    L = e_CEG.get_graph_laplacian(pk-dsk)  # todo L has to be of size M*K
+    print("shape L", np.shape(L))
+    print(L)
+    b = np.zeros(n_k)
+    print("shape b", np.shape(b))
+    sol = solve(2*L/n_m, b)
+    print(sol)
+    print()
 
 
-
-    # print("try optimization")
-    # # try optimization
-    # from scipy import optimize
-    # print("pk")
-    # print(pk)
-    # opt = optimize.minimize(e_CEG.get_eceg(), pk, method="CG")
-    # print(opt)
+    print("try minimize")
+    # try optimization
+    from scipy import optimize
+    print("pk")
+    print(pk)
+    opt = optimize.minimize(e_CEG.get_eCEG(), pk, method="CG")
+    print(opt)

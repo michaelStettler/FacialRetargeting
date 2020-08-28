@@ -71,28 +71,28 @@ print()
 uk = get_soft_mask(delta_sk)  # todo check for uk size!
 print("shape uk", np.shape(uk))
 # get 1st energy term: E_match
-e_match_fn = EMatch(tilda_ckf, uk, np.reshape(delta_af, (F, M*n_dim))).get_ematch()
+e_match_fn = EMatch(tilda_ckf, uk, np.reshape(delta_af, (F, M*n_dim))).get_eMatch()
 
 # 4) Geometric Constraint
 # build initial guess blendshape using RBF wrap (in delta space)
 delta_gk = get_initial_actor_blendshapes(ref_sk, af[0], delta_sk)
 print("shape delta gk", np.shape(delta_gk))
-e_mesh_fn = EMesh(delta_gk).get_emesh()
+e_mesh_fn = EMesh(delta_gk).get_eMesh()
 
 # 5) Cross-Expression Constraint (Cross-Expression Graph: CEG)
-e_ceg_fn = ECEG(delta_sk).get_eceg()
+e_ceg_fn = ECEG(np.reshape(delta_sk, (K, M*n_dim))).get_eCEG()
 
 
 # 6) Optimization of delta_pk by minimizing E_Align
 # build E_Align function
-def e_align(alpha=0.01, beta=0.1):
+def e_align(size, alpha=0.01, beta=0.1):
     def e(dp):
+        dp = np.reshape(dp, size)
         return e_match_fn(dp) + alpha * e_mesh_fn(dp) + beta * e_ceg_fn(dp)
     return e
 
 
 pk = np.random.rand(K, M*n_dim)
 print("pk", np.shape(pk))
-print()
-opt = optimize.minimize(e_align(), pk, method="CG")
+opt = optimize.minimize(e_align((K, M*n_dim)), pk, method="CG")
 print(opt)

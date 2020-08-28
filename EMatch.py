@@ -32,13 +32,13 @@ class EMatch:
         # compute weighted mask
         w_mask = diag_uk @ self.delta_af.T
         # duplicate dp
-        ddp = np.repeat(np.expand_dims(dp, axis=2), self.F, axis=2)
+        dup_dp = np.repeat(np.expand_dims(dp, axis=2), self.F, axis=2)
         # compute norm
-        norm = np.power(np.linalg.norm(ddp - w_mask, axis=1), 2)
+        norm = np.power(np.linalg.norm(dup_dp - w_mask, axis=1), 2)
         # compute e_match
         return np.sum(np.multiply(self.tilda_ckf, norm)) / self.F
 
-    def get_ematch(self):
+    def get_eMatch(self):
         """
         return the function ematch
         :return:
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     print(ematch_ctrl)
 
     # compute e_match
-    e_match_fn = EMatch(tckf, uk, daf).get_ematch()
+    e_match_fn = EMatch(tckf, uk, daf).get_eMatch()
     ematch = e_match_fn(dp)
     print("ematch")
     print(ematch)
