@@ -88,8 +88,25 @@ if __name__ == '__main__':
     opt = optimize.minimize(e_match_fn, dp, method="CG")
     print(opt)
 
-    print("try solve")
-    from scipy.linalg import solve
+    # print("try linprog")
+    # from scipy.optimize import linprog
+    # print("Using slack variables")
+    # # c = [8, 10, 0, 0, 0]
+    # # A = np.array([[4, 15, -1, 0, 0],
+    # #               [6, 4, 0, -1, 0],
+    # #               [5, 2, 0, 0, -1]])
+    # # b = [70, 50, 30]
+    # # sol = linprog(c, A_eq=A, b_eq=b)
+    # print("Using upper bound (<=)")
+    # c = [8, 10]
+    # A = np.array([[-4, -15],
+    #               [-6, -4],
+    #               [-5, -2]])
+    #
+    # b = [-70, -50, -30]
+    # sol = linprog(c, A_ub=A, b_ub=b)
+    # print(sol)
+
     b = []
     for f in range(n_f):
         for k in range(n_k):
