@@ -20,7 +20,7 @@ def triangulate_vertices(vertices):
     return tri
 
 
-def build_Laplacian(mesh, num_V):
+def build_Laplacian(mesh, num_V, anchor_weight=1):
     """
     Build a Laplacian sparse matrix between the vertices of a triangular mesh
     This mainly follow work from:
@@ -38,6 +38,9 @@ def build_Laplacian(mesh, num_V):
     J = []
     V = []
 
+    # find anchoring points (all the vertices they belong to does not have two triangles attached two it)
+    anchors = []
+
     # built sparse Laplacian matrix with cotangent weights
     for vertex in range(num_V):
         # get neighbors vertices of "vertex" -> found here:
@@ -48,6 +51,7 @@ def build_Laplacian(mesh, num_V):
         z = len(v_neighbors)
         I = I + ([vertex] * (z + 1))  # repeated row
         J = J + v_neighbors.tolist() + [vertex]  # column indices and this row
+        is_anchor = False
         for v_neighbor in v_neighbors:
             # find all positions where the triangles have the 2 vertices of interest: vertex--v_neighbor
             tri_has_vertices = np.in1d(mesh.simplices, [vertex, v_neighbor])
@@ -69,11 +73,28 @@ def build_Laplacian(mesh, num_V):
                     (u, v) = (u[0], v[0])
                     # compute cotangents
                     cotangents += np.dot(u, v) / np.sqrt(np.sum(np.square(np.cross(u, v))))
+            else:
+                # if the vertices as one triangle attached to it, it means that the vertices is an edge and therefore,
+                # the vertices is an anchor
+                is_anchor = True
+
+            # add the weights
             weights.append(-.5 * cotangents)
         V = V + weights + [(-1 * np.sum(weights))]  # n negative weights and row vertex sum
 
+        if is_anchor:
+            anchors.append(vertex)
+
     L = sparse.coo_matrix((V, (I, J)), shape=(num_V, num_V)).tocsr()
-    # todo use anchors?
+
+    # augment Laplacian matrix with anchor weights
+    # todo: add to the already exisiting values or keep it ?
+    for anchor in range(len(anchors)):
+        a_neighbors = mesh.vertex_neighbor_vertices[1] \
+            [mesh.vertex_neighbor_vertices[0][anchor]:mesh.vertex_neighbor_vertices[0][anchor + 1]]
+        for a_neighbor in a_neighbors:
+            L[anchor, a_neighbor] -= anchor_weight
+        L[anchor, anchor] += len(a_neighbors)
 
     return L
 
@@ -82,24 +103,29 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     from compute_delta import compute_delta
 
-    np.random.seed(2)
+    np.random.seed(1)
+    np.set_printoptions(precision=4, linewidth=250)
     print("--------- test toy example ----------")
     # declare variables
     n_k = 1  # num_blendshapes
     n_m = 5  # num markers
     n_n = n_m * 3  # num_features (num_markers * 3)
     dgk = np.random.rand(n_k, n_m, 3)
-    dp = np.random.rand(n_k, n_n)
+    print("dgk")
+    print(dgk)
 
     # triangulate points
     print("triangulate vertices")
-    tri_mesh = triangulate_vertices(dp[0])
+    tri_mesh = triangulate_vertices(dgk[0])
+    print("triangles points construction:")
+    print(tri_mesh.simplices)
+    print("point 0", dgk[0, 0])
 
     # plot 3D created meshes
     # todo add a plot function into EMesh or in mesh?
     for i in range(n_k):
-        points = np.reshape(dp[i], (-1, 3))
-        tri_mesh = triangulate_vertices(dp[i])
+        points = dgk[i]
+        tri_mesh = triangulate_vertices(points)
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1, projection='3d')
         ax.plot_trisurf(points[:, 0], points[:, 1], points[:, 2], triangles=tri_mesh.simplices)
@@ -108,6 +134,7 @@ if __name__ == '__main__':
     # compute Laplacian matrix
     print("compute Laplacian")
     L = build_Laplacian(tri_mesh, n_m)
+    print(L.todense())
     print()
 
     print("------------- Test triangulation with Vicon data -------------")

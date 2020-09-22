@@ -61,7 +61,7 @@ class EMatch:
 
         M:= num_markers = self.N / 3
         A*:= (kM x kM) diag matrix with coef = (2/F) * sum_f(c_{k,f})
-        b*:= (kn,) vector with value =(2/F) * sum_f[(c_{k,f}) * diag(u_k) * delta_a_f]
+        b*:= (kM,) vector with value =(2/F) * sum_f[(c_{k,f}) * diag(u_k) * delta_a_f]
 
         :return: AX, AY, AZ, bX, bY, bZ
         """
@@ -88,7 +88,7 @@ class EMatch:
         bY = np.zeros((self.K, M))
         bZ = np.zeros((self.K, M))
 
-        # build A (kn x kn) diagonal matrix
+        # build A (kM x kM) diagonal matrix
         A = (2/self.F) * np.diag(np.repeat(np.sum(self.tilda_ckf, axis=1), M))
 
         # there's probably an even better way to make it all in a matrix form :)
