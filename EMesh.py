@@ -53,6 +53,22 @@ class EMesh:
         return self._emesh
 
     def get_dEmesh(self):
+        """
+        Compute the derivative of E_Mesh (formula 11) at delta_p as to minimize delta_p -> E_mesh' = 0
+        equation: (2/M) * sum_i(L^{m, i}_k) * delta_p^m_k - (2/M) * sum_i(L^{m, i}_k) * delta_g^m_k]
+        with L^i the Laplacian coefficients
+
+        It splits the equation in a diagonal matrix A and a vector b as to solve the equation Ax = b, with x = delta_p
+        Since the equation are separable in xyz, the function splits the data and returns a system of equation for each
+        dimension, resulting in 3*(kMxknM) instead of one (3kMx3kM) -> section 4.6 of the paper
+
+        M:= num_markers = self.N / 3
+        A*:= (kM x kM) diag matrix with coef = (2/M) * s sum_i(L^{m, i}_k)
+        b*:= (kM,) vector with value = (2/M) * sum_i(L^{m, i}_k) * delta_g^m_k
+
+        :return: AX, AY, AZ, bX, bY, bZ
+        :return:
+        """
 
         # test if delta_gk is separable into 3
         if len(np.shape(self.delta_gk)) < 3:
@@ -75,13 +91,13 @@ class EMesh:
 
         # build A (kM x kM) diagonal matrix and b(kM) vector
         for k in range(self.K):
-            # build coef.: sum_m'(L^m_k)
+            # build coef.: sum_m'(L^{m, m'}_k)
             sum_lapl = np.sum(np.power(self.L[k].todense(), 2), axis=0)
 
-            # build A coef. as sum_m'(L^m_k)
+            # build A coef. as sum_m'(L^{m, m'}_k)
             A[k] = sum_lapl
 
-            # build b coef. as sum_m'(L^m_k) * g^k_m
+            # build b coef. as sum_m'(L^{m, m'}_k) * g^m_k
             bX[k] = np.multiply(sum_lapl, np.expand_dims(dgkX[k], axis=1).T)
             bY[k] = np.multiply(sum_lapl, np.expand_dims(dgkY[k], axis=1).T)
             bZ[k] = np.multiply(sum_lapl, np.expand_dims(dgkZ[k], axis=1).T)
