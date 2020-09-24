@@ -8,14 +8,9 @@ class ERetarget():
     def __init__(self, dp, v, v0, mu=0.3, nu=0.6):
         self.mu = mu
         self.nu = nu
-        print("shape v", np.shape(v))
-        print("shape dp", np.shape(dp))
         self.K = np.shape(dp)[0]
         self.N = np.shape(dp)[1]
-        print("self.K", self.K)
-        print("self.N", self.N)
         self.M = int(self.N / 3)
-        print("self.M", self.M)
 
         self.af = None
         self.delta_p = dp
@@ -47,24 +42,17 @@ class ERetarget():
         return self._e_retarget
 
     def get_dEFit(self):
-        A = np.zeros((self.K, self.K))
-        b = np.zeros(self.K)
+        """
+        Compute the derivative of E_fit (formula 2) and split the equation to fit the form: Ax + b
+        With A a square matrix of size (kxk) and b a vector of size (k,)
 
-        for k in range(self.K):
-            _b = 0
-            for l in range(self.K):
-                _a = 0
-                for n in range(self.N):
-                    _a += self.delta_p[k, n] * self.delta_p[l, n]
-                    if k == l:
-                        _b += self.delta_p[k, n] * self.af[n]
+        k:= num blendshapes
+        M := num_markers
 
-                A[k, l] = (2 * _a) / self.M
-            b[k] = 2 * _b / self.M
-        # print("A", np.linalg.det(A))
-        # print(A)
-        # print("b")
-        # print(b)
+        :return: A, b
+        """
+        A = (2/self.M) * self.delta_p @ self.delta_p.T
+        b = (2/self.M) * self.delta_p @ self.af
 
         return A, b
 
@@ -87,6 +75,12 @@ if __name__ == '__main__':
     print("shape dpk", np.shape(dpk))
     print("shape w", np.shape(w))
     print("shape v", np.shape(v))
+    print()
+
+    # ------------------------------------------------------------------------------
+    # ---------------------------      E Fit         -------------------------------
+    # ------------------------------------------------------------------------------
+    print("-------- EFit ---------")
 
     # declare e_retarget
     e_retarg = ERetarget(dpk, v, v0)
@@ -105,9 +99,9 @@ if __name__ == '__main__':
     print("e_fit", e_fit)
     assert e_fit == e_fit_test
     print("E fit values are equal")
+    print()
 
     print("----- Minimization ------")
-    print("EFit")
     import time as time
     print("try optimizer")
     from scipy import optimize
@@ -127,4 +121,10 @@ if __name__ == '__main__':
 
     # test if values matches
     np.testing.assert_array_equal(np.around(opt.x, 5), np.round(sol, 5))
-    print("Reached same values!")
+    print("[EFit] Reaches same values!")
+    print()
+
+    # ------------------------------------------------------------------------------
+    # ---------------------------      E Fit         -------------------------------
+    # ------------------------------------------------------------------------------
+    print("-------- EPrior ---------")
