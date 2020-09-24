@@ -154,7 +154,8 @@ if __name__ == '__main__':
     print("try optimizer")
     from scipy import optimize
     start = time.time()
-    opt = optimize.minimize(e_mesh_fn, dp, method="CG")
+    opt = optimize.minimize(e_mesh_fn, np.reshape(dgk, (n_k, n_n)), method="BFGS")  # todo: confirm that delta_p_k = delta_g_k when solving only for EMesh
+    # print(opt)
     print("solved in:", time.time() - start)
     print("shape opt.x", np.shape(opt.x))
     print(opt.x)
@@ -170,7 +171,9 @@ if __name__ == '__main__':
     print("solved in:", time.time() - start)
     print("shape sol", np.shape(sol))
     print(sol)
+    print("dgk")
+    print(np.reshape(dgk, (n_k, n_n)))
 
     # test if values matches
-    assert opt.x.all() == sol.all()
+    np.testing.assert_array_equal(np.around(opt.x, 5), np.round(sol, 5))
     print("Reached same value!")

@@ -18,6 +18,8 @@ class ECEG:
         self.N = np.shape(delta_sk)[1]
         self.M = int(self.N/3)
 
+
+
     def _compute_gl_operator(self, dsk):
         """
         Compute the graph Laplacian operator as formula 12
@@ -91,10 +93,14 @@ class ECEG:
         """
         return self._eceg
 
+    def get_dECEG(self):
+        print("L", np.shape(L))
+        # todo...
+
 
 if __name__ == '__main__':
 
-    np.random.seed(2)
+    np.random.seed(1)
     # declare variables
     n_k = 4  # num_blendshapes
     n_m = 2  # num markers
@@ -150,56 +156,54 @@ if __name__ == '__main__':
     print("L Decomposition works!")
     print()
 
-    print("------------- test L@pk + c decomposition --------------")
-    # build matrix c to get the L_op(dsk) to get the form of L_op(dpk -dsk) = L @ dpk + c
-    Lsk = e_CEG.get_graph_laplacian(dsk) @ dsk
-    print("c", np.shape(Lsk))
-    print(Lsk)
-
-    # test id decomposition into L@pk + c works
-    dps = pk - dsk
-    gl_dps_test = e_CEG._compute_gl_operator(dps)
-    print("shape gl_dps_test", np.shape(gl_dps_test))
-    print(gl_dps_test)
-
-    gl_dps = Lpk - Lsk
-    print("shape gl_dps", np.shape(gl_dps))
-    print(gl_dps)
-
-    p = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    e_CEG = ECEG(np.random.rand(np.shape(p)[0], np.shape(p)[0]))
-    Lp = e_CEG.get_graph_laplacian(p) @ p
-    print("Lp")
-    print(Lp)
-    s = np.array([[9, 8, 7], [6, 5, 4], [3, 2, 1]])
-    Ls = e_CEG.get_graph_laplacian(s) @ s
-    print("Ls")
-    print(Ls)
-    ps = p - s
-    Lps = e_CEG.get_graph_laplacian(ps) @ ps
-    print("Lps")
-    print(Lps)
-    print(Lp - Ls)
-    print()
-
-    print("try solve")
-    from scipy.linalg import solve
-
-    e_CEG = ECEG(dsk)
-    L = e_CEG.get_graph_laplacian(pk-dsk)  # todo L has to be of size M*K
-    print("shape L", np.shape(L))
-    print(L)
-    b = np.zeros(n_k)
-    print("shape b", np.shape(b))
-    sol = solve(2*L/n_m, b)
-    print(sol)
-    print()
-
+    # print("------------- test L@pk + c decomposition --------------")
+    # # build matrix c to get the L_op(dsk) to get the form of L_op(dpk -dsk) = L @ dpk + c
+    # Lsk = e_CEG.get_graph_laplacian(dsk) @ dsk
+    # print("c", np.shape(Lsk))
+    # print(Lsk)
+    #
+    # # test id decomposition into L@pk + c works
+    # dps = pk - dsk
+    # gl_dps_test = e_CEG._compute_gl_operator(dps)
+    # print("shape gl_dps_test", np.shape(gl_dps_test))
+    # print(gl_dps_test)
+    #
+    # gl_dps = Lpk - Lsk
+    # print("shape gl_dps", np.shape(gl_dps))
+    # print(gl_dps)
+    #
+    # p = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    # e_CEG = ECEG(np.random.rand(np.shape(p)[0], np.shape(p)[0]))
+    # Lp = e_CEG.get_graph_laplacian(p) @ p
+    # print("Lp")
+    # print(Lp)
+    # s = np.array([[9, 8, 7], [6, 5, 4], [3, 2, 1]])
+    # Ls = e_CEG.get_graph_laplacian(s) @ s
+    # print("Ls")
+    # print(Ls)
+    # ps = p - s
+    # Lps = e_CEG.get_graph_laplacian(ps) @ ps
+    # print("Lps")
+    # print(Lps)
+    # print(Lp - Ls)
+    # print()
 
     print("try minimize")
     # try optimization
     from scipy import optimize
-    print("pk")
-    print(pk)
     opt = optimize.minimize(e_CEG.get_eCEG(), pk, method="CG")
     print(opt)
+
+    print("try solve")
+    from scipy.linalg import solve
+
+    e_CEG.get_dECEG()
+    # print("shape L", np.shape(L))
+    # print(L)
+    # b = np.zeros(n_k)
+    # print("shape b", np.shape(b))
+    # sol = solve(2*L/n_m, b)
+    # print(sol)
+    # print()
+
+
