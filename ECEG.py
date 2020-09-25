@@ -18,8 +18,6 @@ class ECEG:
         self.N = np.shape(delta_sk)[1]
         self.M = int(self.N/3)
 
-
-
     def _compute_gl_operator(self, dsk):
         """
         Compute the graph Laplacian operator as formula 12
@@ -94,13 +92,42 @@ class ECEG:
         return self._eceg
 
     def get_dECEG(self):
-        print("L", np.shape(L))
-        # todo...
+        # test if delta_sk are separable into xyz
+        if self.N % 3 != 0:
+            raise ValueError("Number of features ({}) is not a multiple of 3 (xyz)".format(self.N))
+
+        # split data into xyz coordinates
+        x_indices = np.arange(start=0, stop=self.N, step=3)
+        y_indices = np.arange(start=1, stop=self.N, step=3)
+        z_indices = np.arange(start=2, stop=self.N, step=3)
+        # split self.delta_sk
+        skX = self.delta_sk[:, x_indices]
+        skY = self.delta_sk[:, y_indices]
+        skZ = self.delta_sk[:, z_indices]
+
+        # compute Laplacian
+        LskX = self._compute_gl_operator(skX)
+        LskY = self._compute_gl_operator(skY)
+        LskZ = self._compute_gl_operator(skZ)
+
+        # build A
+        AX = (2/self.M) * np.diag(np.power(LskX, 2).flatten())
+        AY = (2/self.M) * np.diag(np.power(LskY, 2).flatten())
+        AZ = (2/self.M) * np.diag(np.power(LskZ, 2).flatten())
+
+        # build b
+        bX = (2/self.M) * np.multiply(np.power(LskX, 2), skX).flatten()
+        bY = (2/self.M) * np.multiply(np.power(LskY, 2), skY).flatten()
+        bZ = (2/self.M) * np.multiply(np.power(LskZ, 2), skZ).flatten()
+
+        return AX, AY, AZ, bX, bY, bZ
 
 
 if __name__ == '__main__':
 
     np.random.seed(1)
+    np.set_printoptions(precision=4, linewidth=200, suppress=True)
+
     # declare variables
     n_k = 4  # num_blendshapes
     n_m = 2  # num markers
@@ -111,7 +138,7 @@ if __name__ == '__main__':
     print(pk)
 
     # compute displacement and similarity
-    dis_dsk = pk - dsk
+    dis_dsk = pk - np.reshape(dsk, (n_k, n_n))
     ckl = compute_corr_coef(dis_dsk, dis_dsk)
 
     # compute graph Laplacian
@@ -156,54 +183,28 @@ if __name__ == '__main__':
     print("L Decomposition works!")
     print()
 
-    # print("------------- test L@pk + c decomposition --------------")
-    # # build matrix c to get the L_op(dsk) to get the form of L_op(dpk -dsk) = L @ dpk + c
-    # Lsk = e_CEG.get_graph_laplacian(dsk) @ dsk
-    # print("c", np.shape(Lsk))
-    # print(Lsk)
-    #
-    # # test id decomposition into L@pk + c works
-    # dps = pk - dsk
-    # gl_dps_test = e_CEG._compute_gl_operator(dps)
-    # print("shape gl_dps_test", np.shape(gl_dps_test))
-    # print(gl_dps_test)
-    #
-    # gl_dps = Lpk - Lsk
-    # print("shape gl_dps", np.shape(gl_dps))
-    # print(gl_dps)
-    #
-    # p = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    # e_CEG = ECEG(np.random.rand(np.shape(p)[0], np.shape(p)[0]))
-    # Lp = e_CEG.get_graph_laplacian(p) @ p
-    # print("Lp")
-    # print(Lp)
-    # s = np.array([[9, 8, 7], [6, 5, 4], [3, 2, 1]])
-    # Ls = e_CEG.get_graph_laplacian(s) @ s
-    # print("Ls")
-    # print(Ls)
-    # ps = p - s
-    # Lps = e_CEG.get_graph_laplacian(ps) @ ps
-    # print("Lps")
-    # print(Lps)
-    # print(Lp - Ls)
-    # print()
-
+    print("----- Minimization ------")
     print("try minimize")
-    # try optimization
+    import time as time
+    print("try optimizer")
     from scipy import optimize
-    opt = optimize.minimize(e_CEG.get_eCEG(), pk, method="CG")
-    print(opt)
+    start = time.time()
+    opt = optimize.minimize(e_CEG.get_eCEG(), dsk, method="CG")
+    print("solved in:", time.time() - start)
+    print("shape opt.x", np.shape(opt.x))
+    print(opt.x)
 
     print("try solve")
     from scipy.linalg import solve
-
-    e_CEG.get_dECEG()
-    # print("shape L", np.shape(L))
-    # print(L)
-    # b = np.zeros(n_k)
-    # print("shape b", np.shape(b))
-    # sol = solve(2*L/n_m, b)
-    # print(sol)
-    # print()
-
+    AX, AY, AZ, bX, bY, bZ = e_CEG.get_dECEG()
+    start = time.time()
+    solX = solve(AX, bX)
+    solY = solve(AY, bY)
+    solZ = solve(AZ, bZ)
+    sol = np.vstack((solX, solY, solZ)).reshape(-1, order='F')
+    print("solved in:", time.time() - start)
+    print("shape sol", np.shape(sol))
+    print(sol)
+    print("dsk")
+    print(dsk.flatten())
 
