@@ -133,12 +133,12 @@ if __name__ == '__main__':
     n_m = 2  # num markers
     n_n = n_m * 3  # num_features (num_markers * 3)
     dsk = np.random.rand(n_k, n_n)
-    pk = np.random.rand(n_k, n_n)
-    print("shape pk", np.shape(pk))
-    print(pk)
+    dp = np.random.rand(n_k, n_n)
+    print("shape dp", np.shape(dp))
+    print(dp)
 
     # compute displacement and similarity
-    dis_dsk = pk - np.reshape(dsk, (n_k, n_n))
+    dis_dsk = dp - np.reshape(dsk, (n_k, n_n))
     ckl = compute_corr_coef(dis_dsk, dis_dsk)
 
     # compute graph Laplacian
@@ -163,20 +163,20 @@ if __name__ == '__main__':
     # compute eCEG
     e_CEG = ECEG(dsk)
     e_ceg_fn = e_CEG.get_eCEG()
-    eceg = e_ceg_fn(pk)
+    eceg = e_ceg_fn(dp)
     print("eceg =", eceg)
 
     assert np.around(eceg, 6) == np.around(eceg_ctrl, 6)
     print("emesh values are equal")
     print()
 
-    print("------------- test L@pk decomposition --------------")
-    Lpk_test = e_CEG._compute_gl_operator(pk)
+    print("------------- test L@k decomposition --------------")
+    Lpk_test = e_CEG._compute_gl_operator(dp)
     print("shape Lpk_test", np.shape(Lpk_test))
     print(Lpk_test)
-    # build matrix L to form the L*pk
-    L = e_CEG.get_graph_laplacian(pk)
-    Lpk = L @ pk
+    # build matrix L to form the L*dp
+    L = e_CEG.get_graph_laplacian(dp)
+    Lpk = L @ dp
     print("shape Lpk", np.shape(Lpk))
     print(Lpk)
     assert Lpk.all() == Lpk_test.all()

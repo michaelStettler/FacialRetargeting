@@ -68,7 +68,7 @@ print()
 
 # 3) Manifold Alignment
 # built soft max vector
-uk = get_soft_mask(delta_sk)  # todo check for uk size!
+uk = get_soft_mask(delta_sk)
 print("shape uk", np.shape(uk))
 # get 1st energy term: E_match
 e_match_fn = EMatch(tilda_ckf, uk, np.reshape(delta_af, (F, M*n_dim))).get_eMatch()
