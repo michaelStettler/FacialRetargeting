@@ -5,6 +5,16 @@ from src.ECEG import ECEG
 
 
 class EAlign:
+    """
+    Construct a class to compute E_Align as in formula 4 using a function to pass directly the personalized blendshapes
+    in delta space delta_p (dp)
+
+    k:= num_of_blendshapes
+    f:= num_frames
+    m:= num_markers
+    n:= num_features (n_m * 3)
+
+    """
 
     def __init__(self, tilda_ckf, uk, delta_af, delta_gk, delta_sk, alpha=0.01, beta=0.1):
         self.tilda_ckf = tilda_ckf
@@ -25,9 +35,23 @@ class EAlign:
         return self.e_match._ematch(dp) + self.alpha * self.e_mesh._emesh(dp) + self.beta * self.e_ceg._eceg(dp)
 
     def get_EAlign(self):
+        """
+        return E Align as a function
+        :return:
+        """
+
+        print("[Warning] Using this function for optimization may be very slow ")
+
         return self._eAlign
 
     def get_dEAlign(self):
+        """
+        Compute E Align as the linear combination of EMatch, EMesh and ECEG as in formula 4.
+        The function return the equation system to solve for the personalized blendshapes delta_p (dp) as Ax + b
+        The function splits the system into xyz coordinates
+
+        :return:
+        """
         AMaX, AMaY, AMaZ, bMaX, bMaY, bMaZ = self.e_match.get_dEmatch()
         AMeX, AMeY, AMeZ, bMeX, bMeY, bMeZ = self.e_mesh.get_dEmesh()
         ACEGX, ACEGY, ACEGZ, bCEGX, bCEGY, bCEGZ = self.e_ceg.get_dECEG()
@@ -54,13 +78,14 @@ if __name__ == '__main__':
     """
     np.random.seed(0)
     np.set_printoptions(precision=4, linewidth=200)
+
     # declare variables
-    n_k = 20
-    n_f = 30
-    n_m = 40
+    n_k = 12  # 2
+    n_f = 10  # 3
+    n_m = 12  # 4
     n_n = n_m * 3  # = 4 markers
 
-
+    # declare random data
     tilda_ckf = np.random.rand(n_k, n_f)  # (k, f)
     uk = np.random.rand(n_k, n_n)
     delta_af = np.random.rand(n_f, n_n)
@@ -68,6 +93,7 @@ if __name__ == '__main__':
     delta_sk = np.random.rand(n_k, n_n)
     dp = np.random.rand(n_k, n_n)
 
+    # declare ERetarget
     e_align = EAlign(tilda_ckf, uk, delta_af, delta_gk, delta_sk)
     e_align_fn = e_align.get_EAlign()
 
@@ -76,7 +102,7 @@ if __name__ == '__main__':
     print("try optimizer")
     from scipy import optimize
     start = time.time()
-    opt = optimize.minimize(e_align_fn, dp, method="CG")
+    opt = optimize.minimize(e_align_fn, dp, method="BFGS")
     print("solved in:", time.time() - start)
     print(opt.x[:10])  # print only 10 first
 

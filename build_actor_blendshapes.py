@@ -9,9 +9,7 @@ from src.compute_corr_coef import compute_tilda_corr_coef
 from src.compute_trust_values import compute_trust_values
 from utils.get_key_expressions import get_key_expressions
 from src.get_soft_mask import get_soft_mask
-from src.EMatch import EMatch
-from src.EMesh import EMesh
-from src.ECEG import ECEG
+from src.EAlign import EAlign
 from src.RBF_warp import get_initial_actor_blendshapes
 from plotting import plot_similarities
 
@@ -41,7 +39,6 @@ print()
 K, M, n_dim = np.shape(delta_sk)
 F = np.shape(delta_af)[0]
 
-
 # 1) Facial Motion Similarity
 # reorder delta blendshapes
 sorted_delta_sk = re_order_delta(np.reshape(delta_sk, (np.shape(delta_sk)[0], -1)))
@@ -63,36 +60,22 @@ print()
 
 # 2) Key Expression Extraction
 key_expressions = get_key_expressions(tilda_ckf, ksize=3, theta=2, do_plot=do_plot)
-print("shape key_expressions", np.shape(key_expressions))
+print("shape key_expressions", np.shape(key_expressions))  # todo where is it used?!?!?
 print()
 
 # 3) Manifold Alignment
 # built soft max vector
 uk = get_soft_mask(delta_sk)
 print("shape uk", np.shape(uk))
-# get 1st energy term: E_match
-e_match_fn = EMatch(tilda_ckf, uk, np.reshape(delta_af, (F, M*n_dim))).get_eMatch()
 
 # 4) Geometric Constraint
 # build initial guess blendshape using RBF wrap (in delta space)
 delta_gk = get_initial_actor_blendshapes(ref_sk, af[0], delta_sk)
-print("shape delta gk", np.shape(delta_gk))
-e_mesh_fn = EMesh(delta_gk).get_eMesh()
 
 # 5) Cross-Expression Constraint (Cross-Expression Graph: CEG)
-e_ceg_fn = ECEG(np.reshape(delta_sk, (K, M*n_dim))).get_eCEG()
+delta_sk = np.reshape(delta_sk, (K, M*n_dim))
 
+# 6) declare E_Align
+e_align = EAlign(tilda_ckf, uk, delta_af, delta_gk, delta_sk)
 
-# 6) Optimization of delta_pk by minimizing E_Align
-# build E_Align function
-def e_align(size, alpha=0.01, beta=0.1):
-    def e(dp):
-        dp = np.reshape(dp, size)
-        return e_match_fn(dp) + alpha * e_mesh_fn(dp) + beta * e_ceg_fn(dp)
-    return e
-
-
-pk = np.random.rand(K, M*n_dim)
-print("pk", np.shape(pk))
-opt = optimize.minimize(e_align((K, M*n_dim)), pk, method="CG")
-print(opt)
+# 7) build personalized actor-specific blendshapes

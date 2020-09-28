@@ -152,7 +152,7 @@ if __name__ == '__main__':
     print("try optimizer")
     from scipy import optimize
     start = time.time()
-    opt = optimize.minimize(e_match_fn, dp, method="CG")
+    opt = optimize.minimize(e_match_fn, dp, method="BFGS")
     print("solved in:", time.time() - start)
     print(opt.x[:10])  # print only 10 first
 

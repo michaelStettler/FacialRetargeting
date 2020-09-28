@@ -192,7 +192,7 @@ if __name__ == '__main__':
     print("try optimizer")
     from scipy import optimize
     start = time.time()
-    opt = optimize.minimize(e_CEG.get_eCEG(), dsk, method="CG")
+    opt = optimize.minimize(e_CEG.get_eCEG(), dsk, method="BFGS")
     print("solved in:", time.time() - start)
     print("shape opt.x", np.shape(opt.x))
     print(opt.x)
