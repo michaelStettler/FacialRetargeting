@@ -1,5 +1,5 @@
 import numpy as np
-from compute_corr_coef import compute_corr_coef
+from src.compute_corr_coef import compute_corr_coef
 
 class ECEG:
     """
@@ -124,6 +124,9 @@ class ECEG:
 
 
 if __name__ == '__main__':
+    """
+    
+    """
 
     np.random.seed(1)
     np.set_printoptions(precision=4, linewidth=200, suppress=True)

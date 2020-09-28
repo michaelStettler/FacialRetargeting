@@ -1,5 +1,5 @@
 import numpy as np
-from compute_corr_coef import compute_corr_coef
+from src.compute_corr_coef import compute_corr_coef
 from plotting import plot_similarities
 
 
@@ -42,10 +42,10 @@ if __name__ == '__main__':
     """
     test compute_trust_values function
     
-    run: python -m compute_trust_values
+    run: python -m src.compute_trust_values
     """
     np.random.seed(0)
-    from re_order_delta import re_order_delta
+    from utils.re_order_delta import re_order_delta
 
     # test compute trust values
     sk = np.random.rand(6, 3)  # (k, n)

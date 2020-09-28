@@ -112,7 +112,7 @@ if __name__ == '__main__':
     1) test that E_Match is computer correctly
     2) test optimization of the E_Match function 
     
-    run: python -m EMatch
+    run: python -m src.EMatch
     """
     np.random.seed(0)
     np.set_printoptions(precision=4, linewidth=200)

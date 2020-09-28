@@ -34,5 +34,5 @@ for bs in mesh_list:
 print("done processing vertices, found (n_bs, n_markers, pos):", np.shape(bs_vrts_pos))
 
 # save vertices positions
-path = 'C:/Users/Michael/PycharmProjects/FacialRetargeting/data/'
+path = '/data/'
 np.save(path + scene_name, bs_vrts_pos)

@@ -1,10 +1,20 @@
 import numpy as np
 
-from mesh import triangulate_vertices
-from mesh import build_Laplacian
+from src.mesh import triangulate_vertices
+from src.mesh import build_Laplacian
 
 
 class ERetarget():
+    """
+    Construct a class to compute E_Retarget as in formula 16 and applay facial retargetting on each frame of a sequence
+    by minimizing the weights vector w
+
+    k:= num_of_blendshapes
+    f:= num_frames
+    m:= num_markers
+    n:= num_features
+
+    """
     def __init__(self, dp, v, v0, mu=0.3, nu=0.6):
         self.mu = mu
         self.nu = nu
@@ -21,9 +31,21 @@ class ERetarget():
         self.LdV = self._build_L_deltaV(v, v0)
 
     def set_af(self, af):
+        """
+        Enable to set the actor frame
+
+        :param af: actor frame
+        :return:
+        """
         self.af = af
 
     def _e_fit(self, w):
+        """
+        Compute EFit as in formula 2
+
+        :param w: vector of size (k,)
+        :return:
+        """
 
         w = np.repeat(np.expand_dims(w, axis=1), self.N, axis=1)
         w_comb = np.multiply(w, self.delta_p)
@@ -32,16 +54,28 @@ class ERetarget():
         return np.linalg.norm(fits)**2/self.M
 
     def _e_sparse(self, w):
+        """
+        Compute ESparse as (1/K) * ||w||1  (1-norm)
+        :param w:
+        :return:
+        """
         return np.linalg.norm(w, ord=1) / self.K
 
     def _build_L_deltaV(self, v, v0):
+        """
+        Compute the matrix product L * delta_V as it remains constant over time
+        delta_V = v - v0
+
+        :param v: expression of interest
+        :param v0: neutral expression
+        :return:
+        """
         LdV = []
         for k in range(self.K):
             # compute delta_V
             if np.array_equal(v[k], v0):
                 # avoid the case of v[k] = v0
                 dV = v[k]
-                print("v[k] = v0")
             else:
                 dV = v[k] - v0
             # build mesh
@@ -64,19 +98,50 @@ class ERetarget():
         return np.array(LdV)
 
     def _e_prior(self, w):
+        """
+        compute EPrior as in formula 15
+
+        EPrior(w) = (1/N) * ||L*delta_V*w||^2
+
+        :param w: vector weights of size (k,)
+        :return:
+        """
         prior = np.multiply(self.LdV, np.repeat(np.expand_dims(w, axis=1), self.N, axis=1))
         return np.sum(np.linalg.norm(prior)**2) / self.N
 
     def _e_retarget(self, w):
+        """
+        Compute eRetarget as in formula 16
+
+        ERetarget(w) = EFit(w) + mu*EPrior(w) + nu*ESparse(w)
+
+        :param w: vector weights of size (k,)
+        :return:
+        """
         return self._e_fit(w) + self.mu * self._e_prior(w) + self.nu * self._e_sparse(w)
 
     def get_EFit(self):
+        """
+        return EFit as a function
+
+        :return:
+        """
         return self._e_fit
 
     def get_EPrior(self):
+        """
+        return EPrior as a function
+
+        :return:
+        """
         return self._e_prior
 
     def get_eRetarget(self):
+        """
+        return ERetarget as a function
+
+        :return:
+        """
         return self._e_retarget
 
     def get_dEFit(self):
@@ -96,6 +161,9 @@ class ERetarget():
 
     def get_dEPrior(self):
         """
+        Compute the equation system to solve EPrior (formula 15)
+
+        EPrior(w) = (1/N) * ||L*delta_V*w||^2
 
         :return: A, b
         """
@@ -106,6 +174,7 @@ class ERetarget():
 
     def get_dESparse(self):
         """
+        Compute the equation system to solve ESparse
 
         :return: A, b
         """
@@ -115,6 +184,12 @@ class ERetarget():
         return A, b
 
     def get_dERetarget(self):
+        """
+        Return the equation system to solve ERetarget as formula 16.
+        It adds up EFit, EPrior and ESparse in a square matrix A and a vector b as to solve the equation Ax + b
+
+        :return:
+        """
         AFit, bFit = e_retarg.get_dEFit()
         APrior, bPrior = e_retarg.get_dEPrior()
         ASparse, bSparse = e_retarg.get_dEPrior()
@@ -126,6 +201,17 @@ class ERetarget():
 
 
 if __name__ == '__main__':
+    """
+    test ERetarget
+    
+    1) compute and test EFit energy error
+    2) compute and test EFit function (minimize) vs. EFit equation (solve)
+    3) compute and test EPrior energy error
+    4) compute and test EPrior function (minimize) vs. EPrior equation (solve)
+    5) compute and test ERetarget function (minimize) vs. ERetarget equation (solve)
+    
+    run: python -m src.ERetarget
+    """
     import time as time
     from scipy import optimize
     from scipy.linalg import solve

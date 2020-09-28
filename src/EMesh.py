@@ -1,8 +1,7 @@
 import numpy as np
-from scipy import sparse
 
-from mesh import triangulate_vertices
-from mesh import build_Laplacian
+from src.mesh import triangulate_vertices
+from src.mesh import build_Laplacian
 
 
 class EMesh:
@@ -119,10 +118,8 @@ if __name__ == '__main__':
     1st part build a random array
     2nd part triangulate a set of markers from Vicon recording into a mesh
     
-    run: python -m EMesh
+    run: python -m src.EMesh
     """
-    import matplotlib.pyplot as plt
-    from compute_delta import compute_delta
 
     np.random.seed(1)
     np.set_printoptions(precision=4, linewidth=250, suppress=True)

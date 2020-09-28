@@ -49,7 +49,7 @@ if __name__ == '__main__':
     """
     Test compute_corr_coef function
     
-    run: python -m compute_corr_coef
+    run: python -m src.compute_corr_coef
     """
 
     np.random.seed(0)

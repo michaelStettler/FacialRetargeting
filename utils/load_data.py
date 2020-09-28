@@ -1,5 +1,5 @@
 from c3d.c3dReader3 import C3DReader
-from compute_delta import compute_delta
+from utils.compute_delta import compute_delta
 import os, sys
 import numpy as np
 
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     """
     test loading a c3d file
     
-    run: python -m load_data
+    run: python -m utils.load_data
     """
 
     path = r"D:\MoCap_Data\David\NewSession_labeled"

@@ -79,7 +79,7 @@ if __name__ == '__main__':
         - get_filt_signals
         - get_key_expressions
         
-    run: python -m get_key_expressions
+    run: python -m utils.get_key_expressions
         
     """
     np.random.seed(0)

@@ -100,8 +100,13 @@ def build_Laplacian(mesh, num_V, anchor_weight=1):
 
 
 if __name__ == '__main__':
+    """
+    test function to automaticall triangulate a set of points
+    
+    run: python -m mesh.mesh
+    """
     import matplotlib.pyplot as plt
-    from compute_delta import compute_delta
+    from utils.compute_delta import compute_delta
 
     np.random.seed(1)
     np.set_printoptions(precision=4, linewidth=250)
@@ -139,7 +144,7 @@ if __name__ == '__main__':
 
     print("------------- Test triangulation with Vicon data -------------")
     # test with recorded Vicon
-    sk = np.load('data/louise_bs_vrts_pos.npy')  # sparse representation of the blend shapes (vk)
+    sk = np.load('../data/louise_bs_vrts_pos.npy')  # sparse representation of the blend shapes (vk)
     ref_sk = sk[-1]  # neutral pose is the last one
     print("shape ref_sk", np.shape(ref_sk))
     delta_sk = compute_delta(sk[:-1], ref_sk)

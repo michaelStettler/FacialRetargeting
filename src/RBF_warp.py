@@ -96,7 +96,7 @@ if __name__ == '__main__':
         - rbf_warp
         - get_initial_actor_blendshapes
         
-    run: python -m RBF_warp
+    run: python -m src.RBF_warp
     """
     # declare variables
     m = 5  # num_markers

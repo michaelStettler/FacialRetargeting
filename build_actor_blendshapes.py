@@ -1,18 +1,18 @@
 import numpy as np
 from scipy import optimize
 
-from load_data import load_training_frames
-from compute_delta import compute_delta
-from re_order_delta import re_order_delta
-from compute_corr_coef import compute_corr_coef
-from compute_corr_coef import compute_tilda_corr_coef
-from compute_trust_values import compute_trust_values
-from get_key_expressions import get_key_expressions
-from get_soft_mask import get_soft_mask
-from EMatch import EMatch
-from EMesh import EMesh
-from ECEG import ECEG
-from RBF_warp import get_initial_actor_blendshapes
+from utils.load_data import load_training_frames
+from utils.compute_delta import compute_delta
+from utils.re_order_delta import re_order_delta
+from src.compute_corr_coef import compute_corr_coef
+from src.compute_corr_coef import compute_tilda_corr_coef
+from src.compute_trust_values import compute_trust_values
+from utils.get_key_expressions import get_key_expressions
+from src.get_soft_mask import get_soft_mask
+from src.EMatch import EMatch
+from src.EMesh import EMesh
+from src.ECEG import ECEG
+from src.RBF_warp import get_initial_actor_blendshapes
 from plotting import plot_similarities
 
 

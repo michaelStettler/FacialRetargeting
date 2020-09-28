@@ -23,7 +23,7 @@ if __name__ == '__main__':
     """
     test re_order function
     
-    run: python -m re_order_delta
+    run: python -m utils.re_order_delta
     """
     np.random.seed(0)
 

@@ -28,7 +28,7 @@ if __name__ == '__main__':
     """
     test get_soft_max function
     
-    run: python -m get_soft_max
+    run: python -m src.get_soft_max
     """
     np.random.seed(0)
     # declare variables
