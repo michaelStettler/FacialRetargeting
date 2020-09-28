@@ -4,10 +4,10 @@ import time as time
 from utils.load_data import load_training_frames
 from utils.compute_delta import compute_delta
 from utils.re_order_delta import re_order_delta
+from utils.get_key_expressions import get_key_expressions
 from src.compute_corr_coef import compute_corr_coef
 from src.compute_corr_coef import compute_tilda_corr_coef
 from src.compute_trust_values import compute_trust_values
-from utils.get_key_expressions import get_key_expressions
 from src.get_soft_mask import get_soft_mask
 from src.EAlign import EAlign
 from src.RBF_warp import get_initial_actor_blendshapes
@@ -19,6 +19,8 @@ run: python -m blendshape_transfer
 """
 
 # define parameters
+save_folder = 'data/'
+file_name = "David_based_Louise_personalized_blendshapes.npy"
 max_num_seq = 3  # set to None if we want to use all the sequences
 do_plot = True
 
@@ -100,6 +102,8 @@ print("[dp] shape delta_sk", np.shape(delta_sk))
 e_align = EAlign(tilda_ckf, uk, delta_af, delta_gk, delta_sk)
 # compute personalized actor-specific blendshapes
 start = time.time()
-delta_p = e_align.compute_actor_specific_blendshapes()
+delta_p = e_align.compute_actor_specific_blendshapes(vectorized=False)
 print("[dp] Solved in:", time.time() - start)
 print("[dp] shape delta_p", np.shape(delta_p))
+# save
+np.save(save_folder + file_name, delta_p)

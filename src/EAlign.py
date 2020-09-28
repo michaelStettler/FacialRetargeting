@@ -27,6 +27,9 @@ class EAlign:
 
         self.alpha = alpha
         self.beta = beta
+        self.K = np.shape(self.delta_sk)[0]
+        self.N = np.shape(self.delta_sk)[1]
+        self.M = np.shape(self.delta_gk)[1]
 
         # declare energy functions
         self.e_match = EMatch(self.tilda_ckf, self.uk, self.delta_af)
@@ -68,7 +71,7 @@ class EAlign:
 
         return AX, AY, AZ, bX, bY, bZ
 
-    def compute_actor_specific_blendshapes(self):
+    def compute_actor_specific_blendshapes(self, vectorized=True):
         """
         Solve EAlign to compute the personalized actor-specific blendshapes in delta space (delta_p)
         The function solve the system Ax + b for each xyz coordinates and merge the results
@@ -79,7 +82,10 @@ class EAlign:
         solX = solve(AX, bX)
         solY = solve(AY, bY)
         solZ = solve(AZ, bZ)
+
         sol = np.vstack((solX, solY, solZ)).reshape(-1, order='F')
+        if vectorized == False:
+            sol = np.reshape(sol, (self.K, self.N))
 
         return sol
 
@@ -97,9 +103,9 @@ if __name__ == '__main__':
     np.set_printoptions(precision=4, linewidth=200)
 
     # declare variables
-    n_k = 12  # 2
-    n_f = 15  # 3
-    n_m = 16  # 4
+    n_k = 2  # 2
+    n_f = 3  # 3
+    n_m = 4  # 4
     n_n = n_m * 3  # = 4 markers
 
     # declare random data
@@ -130,3 +136,10 @@ if __name__ == '__main__':
     print("solved in:", time.time() - start)
     print(sol[:10])  # print only 10 first
     print("shape personalized blendshapes", np.shape(sol))
+
+    # test = np.random.rand(2, 4, 3)
+    # print(test)
+    # test = np.reshape(test, (2, -1))
+    # print(test)
+    # test = np.reshape(test, (2, 4, 3))
+    # print(test)
