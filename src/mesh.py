@@ -72,7 +72,10 @@ def build_Laplacian(mesh, num_V, anchor_weight=1):
                         p])  # todo compute cotangents in u, v or in xyz?....
                     (u, v) = (u[0], v[0])
                     # compute cotangents
-                    cotangents += np.dot(u, v) / np.sqrt(np.sum(np.square(np.cross(u, v))))
+                    if np.cross(u, v) == 0:
+                        cotangents += 1
+                    else:
+                        cotangents += np.dot(u, v) / np.sqrt(np.sum(np.square(np.cross(u, v))))
             else:
                 # if the vertices as one triangle attached to it, it means that the vertices is an edge and therefore,
                 # the vertices is an anchor

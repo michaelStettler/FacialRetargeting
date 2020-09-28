@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.linalg import solve
+
 from src.EMatch import EMatch
 from src.EMesh import EMesh
 from src.ECEG import ECEG
@@ -40,7 +42,7 @@ class EAlign:
         :return:
         """
 
-        print("[Warning] Using this function for optimization may be very slow ")
+        print("[Warning] Using 'get_EAlign()' function for optimization may be very slow ")
 
         return self._eAlign
 
@@ -66,6 +68,21 @@ class EAlign:
 
         return AX, AY, AZ, bX, bY, bZ
 
+    def compute_actor_specific_blendshapes(self):
+        """
+        Solve EAlign to compute the personalized actor-specific blendshapes in delta space (delta_p)
+        The function solve the system Ax + b for each xyz coordinates and merge the results
+        :return: delta_p (n_k*n_n, )
+        """
+
+        AX, AY, AZ, bX, bY, bZ = self.get_dEAlign()
+        solX = solve(AX, bX)
+        solY = solve(AY, bY)
+        solZ = solve(AZ, bZ)
+        sol = np.vstack((solX, solY, solZ)).reshape(-1, order='F')
+
+        return sol
+
 
 if __name__ == '__main__':
     """
@@ -81,8 +98,8 @@ if __name__ == '__main__':
 
     # declare variables
     n_k = 12  # 2
-    n_f = 10  # 3
-    n_m = 12  # 4
+    n_f = 15  # 3
+    n_m = 16  # 4
     n_n = n_m * 3  # = 4 markers
 
     # declare random data
@@ -108,11 +125,8 @@ if __name__ == '__main__':
 
     from scipy.linalg import solve
     print("try solver")
-    AX, AY, AZ, bX, bY, bZ = e_align.get_dEAlign()
     start = time.time()
-    solX = solve(AX, bX)
-    solY = solve(AY, bY)
-    solZ = solve(AZ, bZ)
-    sol = np.vstack((solX, solY, solZ)).reshape(-1, order='F')
+    sol = e_align.compute_actor_specific_blendshapes()
     print("solved in:", time.time() - start)
     print(sol[:10])  # print only 10 first
+    print("shape personalized blendshapes", np.shape(sol))

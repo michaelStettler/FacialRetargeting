@@ -69,7 +69,7 @@ def get_key_expressions(sequence, ksize=3, theta=1, do_plot=False):
     if do_plot:
         plot_cumulative_correlations(cumul_seq, key_expressions)
 
-    return sequence[:, key_expressions]
+    return key_expressions
 
 
 if __name__ == '__main__':
