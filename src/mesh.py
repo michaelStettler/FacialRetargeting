@@ -20,7 +20,7 @@ def triangulate_vertices(vertices):
     return tri
 
 
-def build_Laplacian(mesh, num_V, anchor_weight=1):
+def build_Laplacian(mesh, num_V, standard_weight=1):
     """
     Build a Laplacian sparse matrix between the vertices of a triangular mesh
     This mainly follow work from:
@@ -68,18 +68,14 @@ def build_Laplacian(mesh, num_V, anchor_weight=1):
                     # get opposite vertex from the triangle f touching the edge (vertex--v_neighbor)
                     p = list(filter(lambda v: v not in [vertex, v_neighbor], mesh.simplices[tri_neighbors[f]]))
                     # get u, v -> found  in line 79-80:
-                    (u, v) = (mesh.points[vertex] - mesh.points[p], mesh.points[v_neighbor] - mesh.points[
-                        p])  # todo compute cotangents in u, v or in xyz?....
+                    (u, v) = (mesh.points[vertex] - mesh.points[p], mesh.points[v_neighbor] - mesh.points[p])
                     (u, v) = (u[0], v[0])
                     # compute cotangents
-                    if np.cross(u, v) == 0:
-                        cotangents += 1
-                    else:
-                        cotangents += np.dot(u, v) / np.sqrt(np.sum(np.square(np.cross(u, v))))
+                    cotangents += np.dot(u, v) / np.sqrt(np.sum(np.square(np.cross(u, v))))
+
             else:
-                # if the vertices as one triangle attached to it, it means that the vertices is an edge and therefore,
-                # the vertices is an anchor
-                is_anchor = True
+                # if the vertices as one triangle attached to it, uses standard_weights
+                cotangents += standard_weight
 
             # add the weights
             weights.append(-.5 * cotangents)
@@ -90,21 +86,20 @@ def build_Laplacian(mesh, num_V, anchor_weight=1):
 
     L = sparse.coo_matrix((V, (I, J)), shape=(num_V, num_V)).tocsr()
 
-    # augment Laplacian matrix with anchor weights
-    # todo: add to the already exisiting values or keep it ?
-    for anchor in range(len(anchors)):
-        a_neighbors = mesh.vertex_neighbor_vertices[1] \
-            [mesh.vertex_neighbor_vertices[0][anchor]:mesh.vertex_neighbor_vertices[0][anchor + 1]]
-        for a_neighbor in a_neighbors:
-            L[anchor, a_neighbor] -= anchor_weight
-        L[anchor, anchor] += len(a_neighbors)
+    # # augment Laplacian matrix with anchor weights
+    # for anchor in range(len(anchors)):
+    #     a_neighbors = mesh.vertex_neighbor_vertices[1] \
+    #         [mesh.vertex_neighbor_vertices[0][anchor]:mesh.vertex_neighbor_vertices[0][anchor + 1]]
+    #     for a_neighbor in a_neighbors:
+    #         L[anchor, a_neighbor] -= anchor_weight
+    #     L[anchor, anchor] += len(a_neighbors)
 
     return L
 
 
 if __name__ == '__main__':
     """
-    test function to automaticall triangulate a set of points
+    test function to automatically triangulate a set of points
     
     run: python -m mesh.mesh
     """
