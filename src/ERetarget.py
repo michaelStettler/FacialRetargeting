@@ -218,12 +218,14 @@ if __name__ == '__main__':
     n_k = 30  # num_blendshapes
     n_f = 1  # num_frames
     n_v = 40  # num_vertices (min 4 to use Delaunay)
-    n_n = n_v * 3  # num_features
+    n_m = 5  # num_markers
+    n_n = n_m  # num_features (sparse)
+    n_N = n_v * 3  # num_features
 
-    af = np.random.rand(n_n)  # one single frame!
-    dpk = np.random.rand(n_k, n_n)
+    af = np.random.rand(n_N)  # one single frame!
+    dpk = np.random.rand(n_k, n_N)
     w = np.random.rand(n_k)  # only a single weights per blendshapes!
-    LdV = np.random.rand(n_k, n_n)
+    LdV = np.random.rand(n_k, n_N)
     print("shape af", np.shape(af))
     print("shape dpk", np.shape(dpk))
     print("shape w", np.shape(w))
@@ -285,7 +287,7 @@ if __name__ == '__main__':
         prior = LdV[k] * w[k]
         prior = np.linalg.norm(prior)**2
         priors.append(prior)
-    ePrior_test = np.sum(priors) / n_n
+    ePrior_test = np.sum(priors) / n_N
     print("[EPrior] EPrior_test", ePrior_test)
 
     # compute e_prior

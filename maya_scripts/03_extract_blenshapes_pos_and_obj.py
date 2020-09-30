@@ -10,7 +10,7 @@ scene_name = "louise_to_David_markers_blendshape_vertices_pos"
 bs_groupe = "Louise_bs_GRP"
 
 # load mesh_list
-mesh_list = np.load(mesh_list_name)
+mesh_list = np.load(mesh_list_name).astype(str)
 print("mesh list")
 print(mesh_list)
 
