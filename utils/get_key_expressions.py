@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.signal import find_peaks
 import matplotlib.pyplot as plt
-from plotting import plot_cumulative_correlations
+from utils.plotting import plot_cumulative_correlations
 
 
 def low_pass_filter(signal, ksize=3, theta=1):

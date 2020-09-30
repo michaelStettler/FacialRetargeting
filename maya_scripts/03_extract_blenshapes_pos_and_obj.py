@@ -1,13 +1,13 @@
 import maya.cmds as cmds
 import numpy as np
+import os
 
 # define paremeters for the scenes
-# scene_name = cmds.file(q=True, sn=True, shn=True)
+mesh_list = "D:/Maya projects/DigitalLuise/scripts/mesh_name_list.npy"
+save_path = "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/blendshapes_obj"
 scene_name = "louise_bs_vrts_pos"
 bs_groupe = "Louise_bs_GRP"
 
-# get all blendshapes' meshes
-mesh_list = cmds.ls(bs_groupe, dag=1, type="mesh")  # get all blenshapes from blenshape group
 
 # this is a list of the vertices that matches the markers used in Viccon -> due to python 2.7 and maya I did not
 # manage to use a dictionary, but the matching could be found in data/louise2david_mk2vtrs_dict.py
@@ -18,18 +18,22 @@ vtx_list = [2912, 2589, 2909, 2927, 399, 76, 396, 414, 1779, 155, 825, 2195, 333
 
 # get positions of all the markers across each blendshapes
 bs_vrts_pos = []
-for bs in mesh_list:
-    remove_letters = 5  # somehow maya adds "Shape" at the end of the mesh
-    if 'ShapeOrig' in bs:  # ... and sometimes "ShapeOrig"
-        remove_letters = 9
+for mesh in mesh_list:
     vrts_pos = []
     for vtx in vtx_list:
-        vrts_pos.append(cmds.xform(str(bs[:-remove_letters])+".pnts["+str(vtx)+"]", query=True,
+        vrts_pos.append(cmds.xform(mesh+".pnts["+str(vtx)+"]", query=True,
                                   translation=True,
                                   worldSpace=True))
     bs_vrts_pos.append(vrts_pos)
 
-print("done processing vertices, found (n_bs, n_markers, pos):", np.shape(bs_vrts_pos))
+    # select and save object
+    cmds.select(mesh)
+    cmds.file(os.path.join(save_path, mesh +".obj"), pr=1,
+              typ="OBJexport",
+              es=1,
+              op="groups=0; ptgroups=0; materials=0; smoothing=0; normals=0;")
+
+print("done processing vertices for (n_blendshapes, n_markers, pos):", np.shape(bs_vrts_pos))
 
 # save vertices positions
 path = 'C:/Users/Michael/PycharmProjects/FacialRetargeting/data/'

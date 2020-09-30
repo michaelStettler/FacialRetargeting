@@ -17,5 +17,10 @@ for mesh in mesh_list:
     if 'ShapeOrig' in mesh:  # ... and sometimes "ShapeOrig"
         remove_letters = 9
 
+    mesh_name = str(mesh[:-remove_letters])
+
     # triangulate mesh
-    cmds.polyTriangulate(str(mesh[:-remove_letters]))
+    cmds.polyTriangulate(mesh_name)
+
+    # delete history
+    cmds.delete(mesh_name, ch=True)

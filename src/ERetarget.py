@@ -15,7 +15,7 @@ class ERetarget():
     n:= num_features
 
     """
-    def __init__(self, dp, v, v0, mu=0.3, nu=0.6):
+    def __init__(self, dp, LdV, mu=0.3, nu=0.6):
         self.mu = mu
         self.nu = nu
         self.K = np.shape(dp)[0]
@@ -24,11 +24,7 @@ class ERetarget():
 
         self.af = None
         self.delta_p = dp
-        self.v = v
-        self.v0 = v0
-
-        # compute matrix product L_deltaV
-        self.LdV = self._build_L_deltaV(v, v0)
+        self.LdV = LdV
 
     def set_af(self, af):
         """
@@ -227,17 +223,15 @@ if __name__ == '__main__':
     af = np.random.rand(n_n)  # one single frame!
     dpk = np.random.rand(n_k, n_n)
     w = np.random.rand(n_k)  # only a single weights per blendshapes!
-    v = np.random.rand(n_k, n_n)
-    neutral_pose_idx = 0
-    v0 = v[neutral_pose_idx]
+    LdV = np.random.rand(n_k, n_n)
     print("shape af", np.shape(af))
     print("shape dpk", np.shape(dpk))
     print("shape w", np.shape(w))
-    print("shape v", np.shape(v))
+    print("shape LdV", np.shape(LdV))
     print()
 
     # declare e_retarget
-    e_retarg = ERetarget(dpk, v, v0)
+    e_retarg = ERetarget(dpk, LdV)
     e_retarg.set_af(af)
 
     # ------------------------------------------------------------------------------
@@ -251,27 +245,27 @@ if __name__ == '__main__':
         fits.append(fit)
     fits = af - np.sum(fits, axis=0)
     e_fit_test = np.linalg.norm(fits)**2/n_v
-    print("e_fit_test", e_fit_test)
+    print("[EFit]e_fit_test", e_fit_test)
 
     e_fit = e_retarg._e_fit(w)
-    print("e_fit", e_fit)
+    print("[EFit]e_fit", e_fit)
     assert e_fit == e_fit_test
     print("[EFit] Error values are equal")
     print()
 
-    print("----- Minimization ------")
-    print("try optimizer")
+    print("[EFit]----- Minimization ------")
+    print("[EFit]try optimizer")
     start = time.time()
     opt = optimize.minimize(e_retarg.get_EFit(), w, method="BFGS")
-    print("solved in:", time.time() - start)
+    print("[EFit]solved in:", time.time() - start)
     print(opt.x)
 
-    print("try solver")
+    print("[EFit]try solver")
     A, b = e_retarg.get_dEFit()
     start = time.time()
     sol = solve(A, b)
-    print("solved in:", time.time() - start)
-    print("Sol")
+    print("[EFit]solved in:", time.time() - start)
+    print("[EFit]Sol")
     print(sol)
 
     # test if values matches
@@ -287,55 +281,36 @@ if __name__ == '__main__':
     # test ePrior
     priors = []
     for k in range(n_k):
-        # compute delta_V
-        if k == neutral_pose_idx:
-            # avoid the case of v[neutral_pose_idx] - v0 = 0
-            dV = v[k]
-        else:
-            dV = v[k] - v0
-        # build mesh
-        mesh = triangulate_vertices(dV)
-        # build Laplacian
-        L = build_Laplacian(mesh, n_v)
-        L = L.todense()
-        L_expand = np.zeros((n_n, n_n))
-        # expand L by 3
-        for i in range(n_n):
-            for j in range(n_n):
-                if i % 3 == 0 and j % 3 == 0:
-                    L_expand[i, j] = L[int(i/3), int(j/3)]
-                if i % 3 == 1 and j % 3 == 1:
-                    L_expand[i, j] = L[int(i / 3), int(j / 3)]
-                if i % 3 == 2 and j % 3 == 2:
-                    L_expand[i, j] = L[int(i / 3), int(j / 3)]
-        prior = np.linalg.norm(L_expand @ dV * w[k])**2
+        # compute prior energy
+        prior = LdV[k] * w[k]
+        prior = np.linalg.norm(prior)**2
         priors.append(prior)
     ePrior_test = np.sum(priors) / n_n
-    print("EPrior_test", ePrior_test)
+    print("[EPrior] EPrior_test", ePrior_test)
 
     # compute e_prior
     e_prior_fn = e_retarg.get_EPrior()
     ePrior = e_prior_fn(w)
-    print("ePrior")
+    print("[EPrior] ePrior")
     print(ePrior)
 
     assert round(ePrior_test, 5) == round(ePrior, 5)
     print("[EPrior] Error values are equal")
     print()
 
-    print("----- Minimization ------")
-    print("try optimizer")
+    print("[EPrior] ----- Minimization ------")
+    print("[EPrior] try optimizer")
     start = time.time()
     opt = optimize.minimize(e_retarg.get_EPrior(), w, method="BFGS")
-    print("solved in:", time.time() - start)
+    print("[EPrior] solved in:", time.time() - start)
     print(opt.x)
 
-    print("try solver")
+    print("[EPrior] try solver")
     A, b = e_retarg.get_dEPrior()
     start = time.time()
     sol = solve(A, b)
-    print("solved in:", time.time() - start)
-    print("shape sol", np.shape(sol))
+    print("[EPrior] solved in:", time.time() - start)
+    print("[EPrior] shape sol", np.shape(sol))
     print(sol)
 
     # test if values matches
@@ -347,18 +322,18 @@ if __name__ == '__main__':
     # ------------------------------------------------------------------------------
     print("-------- ERetarget ---------")
 
-    print("test eRetarget")
+    print("[ERetarget] test eRetarget")
     start = time.time()
     opt = optimize.minimize(e_retarg.get_eRetarget(), w, method="BFGS")
-    print("solved in:", time.time() - start)
-    print("shape opt.x", np.shape(opt.x))
+    print("[ERetarget] solved in:", time.time() - start)
+    print("[ERetarget] shape opt.x", np.shape(opt.x))
     print(opt.x)
 
-    print("try solver")
+    print("[ERetarget] try solver")
     A, b = e_retarg.get_dERetarget()
     start = time.time()
     sol = solve(A, b)
-    print("solved in:", time.time() - start)
-    print("shape sol", np.shape(sol))
+    print("[ERetarget] solved in:", time.time() - start)
+    print("[ERetarget] shape sol", np.shape(sol))
     print(sol)
 

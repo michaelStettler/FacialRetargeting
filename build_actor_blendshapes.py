@@ -11,7 +11,7 @@ from src.compute_trust_values import compute_trust_values
 from src.get_soft_mask import get_soft_mask
 from src.EAlign import EAlign
 from src.RBF_warp import get_initial_actor_blendshapes
-from plotting import plot_similarities
+from utils.plotting import plot_similarities
 
 
 """

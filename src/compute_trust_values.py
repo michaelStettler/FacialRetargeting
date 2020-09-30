@@ -1,6 +1,6 @@
 import numpy as np
 from src.compute_corr_coef import compute_corr_coef
-from plotting import plot_similarities
+from utils.plotting import plot_similarities
 
 
 def compute_trust_values(dsk, do_plot=False):
