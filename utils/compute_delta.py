@@ -11,6 +11,6 @@ def compute_delta(data, ref):
     """
     deltas = []
     for d in data:
-        deltas.append(d - ref)  # todo in matrix form...
+        deltas.append(d - ref)
 
     return np.array(deltas)

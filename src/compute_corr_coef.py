@@ -11,7 +11,7 @@ def compute_corr_coef(da, ds):
     n:= num_features (n_markers*3)
 
     :param da: delta-actor training sequence (f, n)
-    :param ds:  delta-character sparse blendshapes (k, n)
+    :param ds: delta-character sparse blendshapes (k, n)
     :return: correlation coefficients in delta representation
     """
 

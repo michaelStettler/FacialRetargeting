@@ -71,7 +71,10 @@ def build_Laplacian(mesh, num_V, standard_weight=1):
                     (u, v) = (mesh.points[vertex] - mesh.points[p], mesh.points[v_neighbor] - mesh.points[p])
                     (u, v) = (u[0], v[0])
                     # compute cotangents
-                    cotangents += np.dot(u, v) / np.sqrt(np.sum(np.square(np.cross(u, v))))
+                    if np.sqrt(np.sum(np.square(np.cross(u, v)))) == 0:
+                        cotangents += standard_weight
+                    else:
+                        cotangents += np.dot(u, v) / np.sqrt(np.sum(np.square(np.cross(u, v))))
 
             else:
                 # if the vertices as one triangle attached to it, uses standard_weights

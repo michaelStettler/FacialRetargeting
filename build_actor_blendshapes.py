@@ -1,5 +1,7 @@
 import numpy as np
 import time as time
+import os
+import matplotlib.pyplot as plt
 
 from utils.load_data import load_training_frames
 from utils.compute_delta import compute_delta
@@ -19,17 +21,34 @@ run: python -m blendshape_transfer
 """
 
 # define parameters
+actor_recording_data_folder = 'D:/MoCap_Data/David/NewSession_labeled/'
+blendshape_mesh_list_name = "D:/Maya projects/DigitalLuise/scripts/mesh_name_list.npy"
+load_folder = 'data/'
+sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertices_pos.npy"
 save_folder = 'data/'
-file_name = "David_based_Louise_personalized_blendshapes.npy"
+save_file_name = "David_based_Louise_personalized_blendshapes.npy"
+neutral_pose_name = 'Louise_Neutral'
 max_num_seq = 3  # set to None if we want to use all the sequences
-do_plot = True
+do_plot = False
 
 # load data
-sk = np.load('data/louise_bs_vrts_pos.npy')  # sparse representation of the blend shapes (vk)
-ref_sk = sk[-1]  # neutral pose is the last one
-delta_sk = compute_delta(sk[:-1], ref_sk)
+mesh_list = np.load(blendshape_mesh_list_name).astype(str)
+sk = np.load(os.path.join(load_folder, sparse_blendhsape_vertices_pos_name))  # sparse representation of the blendshapes (vk)
+# get Neutral blendhsape pose
+ref_index = None
+bs_index = []
+for m, mesh in enumerate(mesh_list):
+    if mesh == neutral_pose_name:
+        ref_index = m
+    else:
+        bs_index.append(m)
+if ref_index is None:
+    raise ValueError("No Neutral pose find!")
+print("[data] Reference index:", ref_index)
+ref_sk = sk[ref_index]
+delta_sk = compute_delta(sk[bs_index, :, :], ref_sk)
 # get actor animation  # todo downsamples freq?
-af, delta_af = load_training_frames('D:/MoCap_Data/David/NewSession_labeled/', num_markers=45, max_num_seq=max_num_seq)
+af, delta_af = load_training_frames(actor_recording_data_folder, num_markers=45, max_num_seq=max_num_seq)
 af = np.delete(af, (38, 39, 40, 44), 1)  # remove HEAD markers
 delta_af = np.delete(delta_af, (38, 39, 40, 44), 1)  # remove HEAD markers
 print("[data] Finished loading data")
@@ -105,5 +124,11 @@ start = time.time()
 delta_p = e_align.compute_actor_specific_blendshapes(vectorized=False)
 print("[dp] Solved in:", time.time() - start)
 print("[dp] shape delta_p", np.shape(delta_p))
-# save
-np.save(save_folder + file_name, delta_p)
+print()
+
+# 6) save delta_p
+np.save(save_folder + save_file_name, delta_p)
+print("[save] saved delta_pk (actor specifik blendshapes), shape:", np.shape(delta_p))
+
+if do_plot:
+    plt.show()

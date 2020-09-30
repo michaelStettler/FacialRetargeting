@@ -2,7 +2,7 @@ import maya.cmds as cmds
 import numpy as np
 import os
 
-save_path = "D:/Maya projects/DigitalLuise/scripts"
+save_path = "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/"
 save_name = "mesh_name_list.npy"
 # select the folder containing all the blendshapes
 bs_group = "Louise_bs_GRP"
