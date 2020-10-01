@@ -19,8 +19,10 @@ class ERetarget():
         self.mu = mu
         self.nu = nu
         self.K = np.shape(dp)[0]
-        self.N = np.shape(dp)[1]
-        self.M = int(self.N / 3)
+        self.n = np.shape(dp)[1]
+        self.M = int(self.n / 3)
+        self.N = np.shape(LdV)[1]
+        self.V = int(self.N / 3)
 
         self.af = None
         self.delta_p = dp
@@ -43,7 +45,7 @@ class ERetarget():
         :return:
         """
 
-        w = np.repeat(np.expand_dims(w, axis=1), self.N, axis=1)
+        w = np.repeat(np.expand_dims(w, axis=1), self.n, axis=1)
         w_comb = np.multiply(w, self.delta_p)
         fits = self.af - np.sum(w_comb, axis=0)
 
@@ -186,9 +188,9 @@ class ERetarget():
 
         :return:
         """
-        AFit, bFit = e_retarg.get_dEFit()
-        APrior, bPrior = e_retarg.get_dEPrior()
-        ASparse, bSparse = e_retarg.get_dEPrior()
+        AFit, bFit = self.get_dEFit()
+        APrior, bPrior = self.get_dEPrior()
+        ASparse, bSparse = self.get_dEPrior()
 
         A = AFit + self.mu * APrior + self.nu * ASparse
         b = bFit + self.mu * bPrior + self.nu * bSparse
@@ -217,13 +219,13 @@ if __name__ == '__main__':
     # declare variables
     n_k = 30  # num_blendshapes
     n_f = 1  # num_frames
+    n_m = 5  # num_markers (min 4 to use Delaunay)
+    n_n = n_m * 3  # num_features (sparse)
     n_v = 40  # num_vertices (min 4 to use Delaunay)
-    n_m = 5  # num_markers
-    n_n = n_m  # num_features (sparse)
-    n_N = n_v * 3  # num_features
+    n_N = n_v * 3  # num_features (full)
 
-    af = np.random.rand(n_N)  # one single frame!
-    dpk = np.random.rand(n_k, n_N)
+    af = np.random.rand(n_n)  # one single frame!
+    dpk = np.random.rand(n_k, n_n)
     w = np.random.rand(n_k)  # only a single weights per blendshapes!
     LdV = np.random.rand(n_k, n_N)
     print("shape af", np.shape(af))
@@ -246,7 +248,7 @@ if __name__ == '__main__':
         fit = w[k] * dpk[k]
         fits.append(fit)
     fits = af - np.sum(fits, axis=0)
-    e_fit_test = np.linalg.norm(fits)**2/n_v
+    e_fit_test = np.linalg.norm(fits)**2/n_m
     print("[EFit]e_fit_test", e_fit_test)
 
     e_fit = e_retarg._e_fit(w)
