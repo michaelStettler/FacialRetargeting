@@ -176,7 +176,7 @@ class ERetarget():
 
         :return: A, b
         """
-        A = (1/self.K) * np.eye(self.K)
+        A = (2/self.K) * np.eye(self.K)
         b = np.zeros(self.K)
 
         return A, b
@@ -217,7 +217,7 @@ if __name__ == '__main__':
     np.random.seed(1)
     np.set_printoptions(precision=4, linewidth=200, suppress=True)
     # declare variables
-    n_k = 30  # num_blendshapes
+    n_k = 4  # num_blendshapes
     n_f = 1  # num_frames
     n_m = 5  # num_markers (min 4 to use Delaunay)
     n_n = n_m * 3  # num_features (sparse)
@@ -326,13 +326,6 @@ if __name__ == '__main__':
     # ------------------------------------------------------------------------------
     print("-------- ERetarget ---------")
 
-    print("[ERetarget] test eRetarget")
-    start = time.time()
-    opt = optimize.minimize(e_retarg.get_eRetarget(), w, method="BFGS")
-    print("[ERetarget] solved in:", time.time() - start)
-    print("[ERetarget] shape opt.x", np.shape(opt.x))
-    print(opt.x)
-
     print("[ERetarget] try solver")
     A, b = e_retarg.get_dERetarget()
     start = time.time()
@@ -340,4 +333,22 @@ if __name__ == '__main__':
     print("[ERetarget] solved in:", time.time() - start)
     print("[ERetarget] shape sol", np.shape(sol))
     print(sol)
+
+    print("[ERetarget] test minimize")
+    start = time.time()
+    opt = optimize.minimize(e_retarg.get_eRetarget(), sol, method="BFGS")
+    print("[ERetarget] solved in:", time.time() - start)
+    print("[ERetarget] shape opt.x", np.shape(opt.x))
+    print(opt.x)
+
+    print("[ERetarget] Least Square")
+    start = time.time()
+    lsq = optimize.least_squares(e_retarg.get_eRetarget(), sol)
+    print("[ERetarget] solved in:", time.time() - start)
+    print("[ERetarget] shape lsq", np.shape(lsq.x))
+    print(lsq.x)
+
+    print("eRetarget optimized:", e_retarg._e_retarget(opt.x))
+    print("eRetarget solved:", e_retarg._e_retarget(sol))
+    print("eRetarget least square:", e_retarg._e_retarget(lsq.x))
 
