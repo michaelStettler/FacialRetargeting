@@ -15,6 +15,11 @@ def compute_corr_coef(da, ds):
     :return: correlation coefficients in delta representation
     """
 
+    if len(np.shape(da)) != 2:
+        raise ValueError("[COMPUTE CORR COEF] da dimensions not supported ({}) instead of 2".format(len(np.shape(da))))
+    if len(np.shape(ds)) != 2:
+        raise ValueError("[COMPUTE CORR COEF] ds dimensions not supported ({}) instead of 2".format(len(np.shape(ds))))
+
     # compute norms
     a_norm = np.diag(np.power(np.linalg.norm(da, axis=1), -1))
     s_norm = np.diag(np.power(np.linalg.norm(ds, axis=1), -1))

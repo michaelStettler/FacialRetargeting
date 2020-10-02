@@ -67,17 +67,18 @@ print()
 
 # 1) Facial Motion Similarity
 # reorder delta blendshapes
-sorted_delta_sk = re_order_delta(np.reshape(delta_sk, (np.shape(delta_sk)[0], -1)))
+sorted_delta_sk, sorted_index = re_order_delta(delta_sk)
+sorted_mesh_list = mesh_list[sorted_index]
 print("[Pre-processing] shape sorted_delta_sk", np.shape(sorted_delta_sk))
 
 # measure similarity between character blendshapes and actor's capture performance
 ckf = compute_corr_coef(np.reshape(delta_af, (np.shape(delta_af)[0], -1)),
-                        np.reshape(sorted_delta_sk, (np.shape(delta_sk)[0], -1)))
+                        np.reshape(sorted_delta_sk, (np.shape(sorted_delta_sk)[0], -1)))
 if do_plot:
     plot_similarities(ckf, "Fig. 7: Motion space similarity")
 
 # contrast enhancement
-tk = compute_trust_values(sorted_delta_sk, do_plot=do_plot)
+tk = compute_trust_values(np.reshape(sorted_delta_sk, (np.shape(sorted_delta_sk)[0], -1)), do_plot=do_plot)
 tilda_ckf = compute_tilda_corr_coef(ckf, tk)
 print("[Pre-processing] shape ckf", np.shape(ckf))
 print("[Pre-processing] shape tk", np.shape(tk))
@@ -88,7 +89,7 @@ print()
 key_expressions_idx = get_key_expressions(tilda_ckf, ksize=3, theta=2, do_plot=do_plot)
 print("[Key Expr. Extract.] shape key_expressions", np.shape(key_expressions_idx))
 F = len(key_expressions_idx)
-print("[Key Expr. Extract.] Keep", F, " frames")
+print("[Key Expr. Extract.] Keep", F, "frames")
 delta_af = delta_af[key_expressions_idx, :, :]
 tilda_ckf = tilda_ckf[:, key_expressions_idx]
 print("[Key Expr. Extract.] shape delta_af", np.shape(delta_af))
@@ -97,28 +98,28 @@ print()
 
 # 3) Manifold Alignment
 # built soft max vector
-uk = get_soft_mask(delta_sk)
+uk = get_soft_mask(sorted_delta_sk)
 print("[SoftMax] shape uk", np.shape(uk))
 print()
 
 # 4) Geometric Constraint
 # build initial guess blendshape using RBF wrap (in delta space)
-delta_gk = get_initial_actor_blendshapes(ref_sk, af[0], delta_sk)
+delta_gk = get_initial_actor_blendshapes(ref_sk, af[0], sorted_delta_sk)
 print("[RBF Wrap] shape delta_gk", np.shape(delta_gk))
 print()
 
 # 5) build personalized actor-specific blendshapes (delta_p)
 # rehsape to match required dimensions
 delta_af = np.reshape(delta_af, (F, M*n_dim))
-delta_sk = np.reshape(delta_sk, (K, M*n_dim))
+sorted_delta_sk = np.reshape(sorted_delta_sk, (K, M*n_dim))
 # print control of all shapes
 print("[dp] shape tilda_ckf:", np.shape(tilda_ckf))
 print("[dp] shape uk:", np.shape(uk))
 print("[dp] shape delta_af:", np.shape(delta_af))
 print("[dp] shape delta_gk:", np.shape(delta_gk))
-print("[dp] shape delta_sk", np.shape(delta_sk))
+print("[dp] shape delta_sk", np.shape(sorted_delta_sk))
 # declare E_Align
-e_align = EAlign(tilda_ckf, uk, delta_af, delta_gk, delta_sk)
+e_align = EAlign(tilda_ckf, uk, delta_af, delta_gk, sorted_delta_sk)
 # compute personalized actor-specific blendshapes
 start = time.time()
 delta_p = e_align.compute_actor_specific_blendshapes(vectorized=False)
@@ -126,9 +127,11 @@ print("[dp] Solved in:", time.time() - start)
 print("[dp] shape delta_p", np.shape(delta_p))
 print()
 
-# 6) save delta_p
+# 6) save delta_p ans sorted_mesh_list
 np.save(save_folder + save_file_name, delta_p)
+np.save(save_folder + 'sorted_mesh_name_list', sorted_mesh_list)
 print("[save] saved delta_pk (actor specifik blendshapes), shape:", np.shape(delta_p))
+print("[save] saved sorted_mesh_list, shape:", np.shape(delta_p))
 
 if do_plot:
     plt.show()

@@ -14,6 +14,10 @@ def compute_trust_values(dsk, do_plot=False):
     :param do_plot: decide if we want to plot the between-correlation matrix
     :return: trust values vector (k,)
     """
+
+    if len(np.shape(dsk)) != 2:
+        raise ValueError("[COMPUTE TRUST VALUE] dsk dimensions not supported ({}) instead of 2".format(len(np.shape(dsk))))
+
     # compute between-blendshape correlation
     ckl = compute_corr_coef(dsk, dsk)
     ckl = np.maximum(ckl, np.zeros(np.shape(ckl)))
