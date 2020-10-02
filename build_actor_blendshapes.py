@@ -30,6 +30,7 @@ save_file_name = "David_based_Louise_personalized_blendshapes.npy"
 neutral_pose_name = 'Louise_Neutral'
 max_num_seq = 3  # set to None if we want to use all the sequences
 do_plot = False
+save = True
 
 # load data
 mesh_list = np.load(blendshape_mesh_list_name).astype(str)
@@ -37,11 +38,13 @@ sk = np.load(os.path.join(load_folder, sparse_blendhsape_vertices_pos_name))  # 
 # get Neutral blendhsape pose
 ref_index = None
 bs_index = []
+cleaned_mesh_list = []
 for m, mesh in enumerate(mesh_list):
     if mesh == neutral_pose_name:
         ref_index = m
     else:
         bs_index.append(m)
+        cleaned_mesh_list.append(mesh)
 if ref_index is None:
     raise ValueError("No Neutral pose find!")
 print("[data] Reference index:", ref_index)
@@ -53,8 +56,10 @@ af = np.delete(af, (38, 39, 40, 44), 1)  # remove HEAD markers
 delta_af = np.delete(delta_af, (38, 39, 40, 44), 1)  # remove HEAD markers
 print("[data] Finished loading data")
 print("[data] shape af:", np.shape(af))
+print("[data] shape sk", np.shape(sk))
 print("[data] shape delta_sk", np.shape(delta_sk))
 print("[data] shape delta af:", np.shape(delta_af))
+print("[data] cleaned_mesh_list:", len(cleaned_mesh_list))
 
 # get dimensions
 K, M, n_dim = np.shape(delta_sk)
@@ -68,8 +73,9 @@ print()
 # 1) Facial Motion Similarity
 # reorder delta blendshapes
 sorted_delta_sk, sorted_index = re_order_delta(delta_sk)
-sorted_mesh_list = mesh_list[sorted_index]
+sorted_mesh_list = np.array(cleaned_mesh_list)[sorted_index]
 print("[Pre-processing] shape sorted_delta_sk", np.shape(sorted_delta_sk))
+print("[Pre-processing] len sorted_mesh_list", len(sorted_mesh_list))
 
 # measure similarity between character blendshapes and actor's capture performance
 ckf = compute_corr_coef(np.reshape(delta_af, (np.shape(delta_af)[0], -1)),
@@ -128,10 +134,11 @@ print("[dp] shape delta_p", np.shape(delta_p))
 print()
 
 # 6) save delta_p ans sorted_mesh_list
-np.save(save_folder + save_file_name, delta_p)
-np.save(save_folder + 'sorted_mesh_name_list', sorted_mesh_list)
-print("[save] saved delta_pk (actor specifik blendshapes), shape:", np.shape(delta_p))
-print("[save] saved sorted_mesh_list, shape:", np.shape(delta_p))
+if save:
+    np.save(save_folder + save_file_name, delta_p)
+    np.save(save_folder + 'sorted_mesh_name_list', sorted_mesh_list)
+    print("[save] saved delta_pk (actor specifik blendshapes), shape:", np.shape(delta_p))
+    print("[save] saved sorted_mesh_list, shape:", np.shape(delta_p))
 
 if do_plot:
     plt.show()

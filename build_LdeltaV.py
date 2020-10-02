@@ -42,6 +42,8 @@ def build_L_deltaV(mesh_list, path, ref_mesh_name):
 
             # compute LdV
             LdVs.append(np.dot(L, dv_mesh.vertices))
+        else:
+            print("[Warning] Ref blendshape found in the sorted mesh list name!")
 
     return np.array(LdVs)
 
@@ -49,10 +51,6 @@ def build_L_deltaV(mesh_list, path, ref_mesh_name):
 # get LdV
 start = time.time()
 LdV = build_L_deltaV(mesh_list, mesh_path, ref_mesh_name)
-
-if np.shape(LdV)[0] == num_blendshapes:
-    print("[Warning] No neutral pose found!")
-
 print("Done computing in:", time.time() - start)
 
 # reshape and save

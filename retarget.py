@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from tqdm import tqdm
 from scipy.linalg import solve
 
 from utils.load_data import load_training_seq
@@ -44,8 +45,7 @@ print()
 eRetarget = ERetarget(delta_p, LdV)
 
 weights = []
-for i in range(200):
-    print("frame:", i)
+for i in tqdm(range(200)):
     eRetarget.set_af(delta_af[i])
     A, b = eRetarget.get_dERetarget()
     w = solve(A, b)
@@ -53,7 +53,12 @@ for i in range(200):
 
 print("[Retarget] shape weights", np.shape(weights))
 
+# normalize weights
+
+
 # save
 np.save(os.path.join(save_folder, save_name), weights)
+print("weights save as:", os.path.join(save_folder, save_name))
+print("max weights", np.amax(weights))
 
 
