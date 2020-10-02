@@ -1,6 +1,7 @@
 import pymesh
 import numpy as np
 import os
+import time
 
 np.set_printoptions(precision=4, linewidth=250, suppress=True)
 
@@ -46,12 +47,16 @@ def build_L_deltaV(mesh_list, path, ref_mesh_name):
 
 
 # get LdV
+start = time.time()
 LdV = build_L_deltaV(mesh_list, mesh_path, ref_mesh_name)
 
 if np.shape(LdV)[0] == num_blendshapes:
     print("[Warning] No neutral pose found!")
 
+print("Done computing in:", time.time() - start)
+
 # reshape and save
 LdV = np.reshape(LdV, (np.shape(LdV)[0], -1))
 print("shape LdV", np.shape(LdV))
 np.save(os.path.join(save_path, save_name), LdV)
+print("Saved!")
