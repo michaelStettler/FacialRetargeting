@@ -54,8 +54,8 @@ for i in tqdm(range(200)):
 print("[Retarget] shape weights", np.shape(weights))
 
 # normalize weights
-
-
+print("max weights", np.amax(weights))
+weights = weights / np.amax(weights)
 # save
 np.save(os.path.join(save_folder, save_name), weights)
 print("weights save as:", os.path.join(save_folder, save_name))
