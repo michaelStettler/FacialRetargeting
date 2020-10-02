@@ -1,20 +1,18 @@
 import pymesh
 import numpy as np
 import os
-from scipy import sparse
 
 np.set_printoptions(precision=4, linewidth=250, suppress=True)
 
 # define parameters
 mesh_path = 'data/blendshapes_obj'
 ref_mesh_name = 'Louise_Neutral'
-mesh_list_path = "data/"
-mesh_list_name = 'mesh_name_list.npy'
+mesh_list_name = "data/sorted_mesh_name_list.npy"  # important to use the sorted list!
 save_path = "data/"
 save_name = "LdV_louise"
 
 # load mesh_list
-mesh_list = np.load(os.path.join(mesh_list_path, mesh_list_name)).astype(str)
+mesh_list = np.load(mesh_list_name).astype(str)
 num_blendshapes = len(mesh_list)
 print("num_blendshapes", num_blendshapes)
 

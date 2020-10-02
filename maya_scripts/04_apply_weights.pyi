@@ -3,7 +3,7 @@ import numpy as np
 
 # define paremeters for the scenes
 weights_name = "D:/Maya projects/DigitalLuise/data/retarget/David/weights_David2Louise_retarget_AngerTrail.npy"
-mesh_list_name = 'D:/Maya projects/DigitalLuise/data/mesh_name_list.npy'
+mesh_list_name = 'C:/Users/Michael/PycharmProjects/FacialRetargeting/data/sorted_mesh_name_list.npy'  # important to use the sorted mesh list
 neutral_pose = "Louise_Neutral"
 
 # load parameters
