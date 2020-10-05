@@ -79,7 +79,7 @@ def get_delta_af(training_seq):
     return af, delta_af
 
 
-def load_training_frames(path, num_markers=45, max_num_seq=None):
+def load_training_frames(path, num_markers=45, max_num_seq=None, down_sample_factor=None):
     # get all sequences
     sequences_list = []
     for file in os.listdir(path):
@@ -91,20 +91,19 @@ def load_training_frames(path, num_markers=45, max_num_seq=None):
     # get all training frames
     print("loading training data...")
     training_seq = []
-    if max_num_seq is None:
-        for seq_name in sequences_list:
-            seq = load_training_seq(path, seq_name, num_markers)
-
-            if seq is not None:
-                training_seq.append(seq)
-    else:
+    if max_num_seq is not None:
+        sequences_list = sequences_list[:max_num_seq]
         print("Warning!, Using max_num_seq parameter!", max_num_seq)
-        for seq_name in sequences_list[:max_num_seq]:
-            seq = load_training_seq(path, seq_name, num_markers)
-
-            if seq is not None:
-                training_seq.append(seq)
     print("Retaining", len(training_seq), "sequence(s)")
+
+    for seq_name in sequences_list:
+        seq = load_training_seq(path, seq_name, num_markers)
+
+        if seq is not None:
+            if down_sample_factor is not None:
+                sample = np.arange(0, len(seq), down_sample_factor)
+                seq = seq[sample]
+            training_seq.append(seq)
 
     af, delta_af = get_delta_af(training_seq)
     return af, delta_af

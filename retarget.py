@@ -14,10 +14,12 @@ load_folder = "data/"
 delta_p_name = "David_based_Louise_personalized_blendshapes.npy"
 LdV_name = "LdV_louise.npy"
 load_sequence_folder = "D:/MoCap_Data/David/NewSession_labeled/"
-sequence_name = "AngerTrail05.c3d"
+# sequence_name = "AngerTrail05.c3d"
+sequence_name = "FearTrail03.c3d"
 num_markers = 45
 save_folder = "data/"
-save_name = "weights_David2Louise_retarget_AngerTrail"
+# save_name = "weights_David2Louise_retarget_AngerTrail"
+save_name = "weights_David2Louise_retarget_FearTrail"
 
 # ----------------------- data -------------------------
 # load data
@@ -45,7 +47,8 @@ print()
 eRetarget = ERetarget(delta_p, LdV)
 
 weights = []
-for i in tqdm(range(200)):
+# for i in tqdm(range(200)):
+for i in tqdm(range(num_frames)):
     eRetarget.set_af(delta_af[i])
     A, b = eRetarget.get_dERetarget()
     w = solve(A, b)
@@ -56,9 +59,10 @@ print("[Retarget] shape weights", np.shape(weights))
 # normalize weights
 print("max weights", np.amax(weights))
 weights = weights / np.amax(weights)
+max_index = np.argmax(weights)
 # save
 np.save(os.path.join(save_folder, save_name), weights)
 print("weights save as:", os.path.join(save_folder, save_name))
-print("max weights", np.amax(weights))
+print("max weights", np.amax(weights), "at", max_index)
 
 

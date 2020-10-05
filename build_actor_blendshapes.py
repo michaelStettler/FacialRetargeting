@@ -28,7 +28,7 @@ sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertic
 save_folder = 'data/'
 save_file_name = "David_based_Louise_personalized_blendshapes.npy"
 neutral_pose_name = 'Louise_Neutral'
-max_num_seq = 3  # set to None if we want to use all the sequences
+max_num_seq = None  # set to None if we want to use all the sequences
 do_plot = False
 save = True
 
@@ -51,7 +51,10 @@ print("[data] Reference index:", ref_index)
 ref_sk = sk[ref_index]
 delta_sk = compute_delta(sk[bs_index, :, :], ref_sk)
 # get actor animation  # todo downsamples freq?
-af, delta_af = load_training_frames(actor_recording_data_folder, num_markers=45, max_num_seq=max_num_seq)
+af, delta_af = load_training_frames(actor_recording_data_folder,
+                                    num_markers=45,
+                                    max_num_seq=max_num_seq,
+                                    down_sample_factor=4)
 af = np.delete(af, (38, 39, 40, 44), 1)  # remove HEAD markers
 delta_af = np.delete(delta_af, (38, 39, 40, 44), 1)  # remove HEAD markers
 print("[data] Finished loading data")
