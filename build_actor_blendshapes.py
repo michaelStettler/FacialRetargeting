@@ -24,9 +24,9 @@ run: python -m blendshape_transfer
 actor_recording_data_folder = 'D:/MoCap_Data/David/NewSession_labeled/'
 blendshape_mesh_list_name = "D:/Maya projects/DigitalLuise/scripts/mesh_name_list.npy"
 load_folder = 'data/'
-sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertices_pos.npy"
+sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertices_pos_v2.npy"
 save_folder = 'data/'
-save_file_name = "David_based_Louise_personalized_blendshapes.npy"
+save_file_name = "David_based_Louise_personalized_blendshapes_v2.npy"
 neutral_pose_name = 'Louise_Neutral'
 max_num_seq = None  # set to None if we want to use all the sequences
 do_plot = False

@@ -14,12 +14,13 @@ load_folder = "data/"
 delta_p_name = "David_based_Louise_personalized_blendshapes.npy"
 LdV_name = "LdV_louise.npy"
 load_sequence_folder = "D:/MoCap_Data/David/NewSession_labeled/"
-# sequence_name = "AngerTrail05.c3d"
-sequence_name = "FearTrail03.c3d"
+sequence_name = "AngerTrail05.c3d"
+# sequence_name = "FearTrail03.c3d"
 num_markers = 45
 save_folder = "data/"
-# save_name = "weights_David2Louise_retarget_AngerTrail"
-save_name = "weights_David2Louise_retarget_FearTrail"
+save_name = "weights_David2Louise_retarget_AngerTrail_2000_L2_v2"
+# save_name = "weights_David2Louise_retarget_FearTrail"
+use_L2 = True
 
 # ----------------------- data -------------------------
 # load data
@@ -47,22 +48,37 @@ print()
 eRetarget = ERetarget(delta_p, LdV)
 
 weights = []
-# for i in tqdm(range(200)):
-for i in tqdm(range(num_frames)):
+# for i in tqdm(range(2000)):
+for i in tqdm(range(1589, 1590)):
+# for i in tqdm(range(num_frames)):
     eRetarget.set_af(delta_af[i])
-    A, b = eRetarget.get_dERetarget()
+    A, b = eRetarget.get_dERetarget(L2=use_L2)
     w = solve(A, b)
     weights.append(w)
+
+    from scipy import optimize
+    opt = optimize.minimize(eRetarget.get_eRetarget(), w, method="BFGS")
+    max_weights = np.amax(opt.x)
+    min_weights = np.amin(opt.x)
+    max_index = np.argmax(opt.x)
+    min_index = np.argmin(opt.x)
+    print("[opt] max weights", max_weights, "at", max_index)
+    print("[opt] min weights", min_weights, "at", min_index)
 
 print("[Retarget] shape weights", np.shape(weights))
 
 # normalize weights
-print("max weights", np.amax(weights))
-weights = weights / np.amax(weights)
+max_weights = np.amax(weights)
+min_weights = np.amin(weights)
 max_index = np.argmax(weights)
-# save
-np.save(os.path.join(save_folder, save_name), weights)
-print("weights save as:", os.path.join(save_folder, save_name))
-print("max weights", np.amax(weights), "at", max_index)
+min_index = np.argmin(weights)
+print("max weights", max_weights, "at", max_index)
+print("min weights", min_weights, "at", min_index)
+weights = weights / np.amax(weights)
+
+# # save
+# np.save(os.path.join(save_folder, save_name), weights)
+# print("weights save as:", os.path.join(save_folder, save_name))
+# print("max weights", np.amax(weights), "at", max_index)
 
 

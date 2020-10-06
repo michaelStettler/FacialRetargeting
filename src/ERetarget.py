@@ -176,12 +176,12 @@ class ERetarget():
 
         :return: A, b
         """
-        A = (2/self.K) * np.eye(self.K)
+        A = (1/self.K) * np.eye(self.K)
         b = np.zeros(self.K)
 
         return A, b
 
-    def get_dERetarget(self):
+    def get_dERetarget(self, L2=False):
         """
         Return the equation system to solve ERetarget as formula 16.
         It adds up EFit, EPrior and ESparse in a square matrix A and a vector b as to solve the equation Ax + b
@@ -190,9 +190,13 @@ class ERetarget():
         """
         AFit, bFit = self.get_dEFit()
         APrior, bPrior = self.get_dEPrior()
-        ASparse, bSparse = self.get_dEPrior()
+        ASparse, bSparse = self.get_dESparse()
 
-        A = AFit + self.mu * APrior + self.nu * ASparse
+        if L2:
+            # A = AFit + self.mu * APrior + self.nu * ASparse + np.eye(self.K)
+            A = AFit + self.mu * APrior + np.eye(self.K)
+        else:
+            A = AFit + self.mu * APrior + self.nu * ASparse
         b = bFit + self.mu * bPrior + self.nu * bSparse
 
         return A, b
