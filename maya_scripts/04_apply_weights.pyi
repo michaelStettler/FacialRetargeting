@@ -2,7 +2,7 @@ import maya.cmds as cmds
 import numpy as np
 
 # define paremeters for the scenes
-weights_name = "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/weights_David2Louise_retarget_AngerTrail.npy"
+weights_name = "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/weights_David2Louise_retarget_AngerTrail_3000_L1_L2_v2.npy"
 mesh_list_name = 'C:/Users/Michael/PycharmProjects/FacialRetargeting/data/sorted_mesh_name_list.npy'  # important to use the sorted mesh list!
 neutral_pose = "Louise_Neutral"
 bs_node_name = "bs_node"
@@ -12,6 +12,8 @@ weights = np.load(weights_name)
 mesh_list_name = np.load(mesh_list_name).astype(str)
 print("shape weights", np.shape(weights))
 print("shape mesh_list_name", np.shape(mesh_list_name))
+ref_w = weights[1]
+print("shape ref_w", np.shape(ref_w))
 
 # select node
 cmds.select(bs_node_name)
@@ -23,8 +25,10 @@ for f in range(np.shape(weights)[0]):
     bs_idx = 0
     for bs in mesh_list_name:
         if bs != neutral_pose:  # remove neutral pose
-            w = max(-10, weights[f, bs_idx])  # todo ask if normal to remove neutral weights? -> Maya crashes if I don't do it
+            # w = max(-10, weights[f, bs_idx])
+            w = max(0, weights[f, bs_idx])
+            # w = max(0, weights[f, bs_idx] - ref_w[bs_idx])
             w = min(w, 10)
-            cmds.setAttr(bs_node_name + '.' + bs, w*3)
+            cmds.setAttr(bs_node_name + '.' + bs, w)
             bs_idx += 1
     cmds.setKeyframe(t=f)

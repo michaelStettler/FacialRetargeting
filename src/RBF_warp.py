@@ -81,10 +81,10 @@ def get_initial_actor_blendshapes(s0, a0, delta_sk):
     """
     # compute initial transform of neutral pose
     W, A = rbf_warp(s0, a0)
+
     # compute initial guess by transforming each character blendshapes delta_sk
-    K = np.shape(delta_sk)[0]
     delta_gk = np.zeros(np.shape(delta_sk))
-    for k in range(K):
+    for k in range(np.shape(delta_sk)[0]):
         delta_gk[k] = np.multiply(delta_sk[k], W)
 
     return delta_gk

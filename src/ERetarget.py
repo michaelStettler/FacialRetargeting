@@ -193,8 +193,8 @@ class ERetarget():
         ASparse, bSparse = self.get_dESparse()
 
         if L2:
-            # A = AFit + self.mu * APrior + self.nu * ASparse + np.eye(self.K)
-            A = AFit + self.mu * APrior + np.eye(self.K)
+            A = AFit + self.mu * APrior + self.nu * ASparse + np.eye(self.K)
+            # A = AFit + self.mu * APrior + np.eye(self.K)
         else:
             A = AFit + self.mu * APrior + self.nu * ASparse
         b = bFit + self.mu * bPrior + self.nu * bSparse

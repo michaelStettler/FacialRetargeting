@@ -28,6 +28,7 @@ sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertic
 save_folder = 'data/'
 save_file_name = "David_based_Louise_personalized_blendshapes_v2.npy"
 neutral_pose_name = 'Louise_Neutral'
+ref_actor_pose = 'data/David_neutral_pose.npy'
 max_num_seq = None  # set to None if we want to use all the sequences
 do_plot = False
 save = True
@@ -46,18 +47,38 @@ for m, mesh in enumerate(mesh_list):
         bs_index.append(m)
         cleaned_mesh_list.append(mesh)
 if ref_index is None:
-    raise ValueError("No Neutral pose find!")
-print("[data] Reference index:", ref_index)
+    raise ValueError("No Neutral blendshape pose found!")
 ref_sk = sk[ref_index]
 delta_sk = compute_delta(sk[bs_index, :, :], ref_sk)
-# get actor animation  # todo downsamples freq?
+
+# test if delta_sk has no none-unique entry
+test_unique = np.unique(ref_sk, axis=1)
+if np.shape(test_unique)[0] != np.shape(ref_sk)[0]:
+    raise ValueError("delta_sk contains non unique entry! Check your index dictionary to build the sparse blendshape "
+                     "(maya_scripts.03_extract_blendshapes_pos_and_obj)")
+
+# get actor animation
+template_labels = ['LeftBrow1', 'LeftBrow2', 'LeftBrow3', 'LeftBrow4', 'RightBrow1', 'RightBrow2', 'RightBrow3',
+                 'RightBrow4', 'Nose1', 'Nose2', 'Nose3', 'Nose4', 'Nose5', 'Nose6', 'Nose7', 'Nose8',
+                 'UpperMouth1', 'UpperMouth2', 'UpperMouth3', 'UpperMouth4', 'UpperMouth5', 'LowerMouth1',
+                 'LowerMouth2', 'LowerMouth3', 'LowerMouth4', 'LeftOrbi1', 'LeftOrbi2', 'RightOrbi1', 'RightOrbi2',
+                 'LeftCheek1', 'LeftCheek2', 'LeftCheek3', 'RightCheek1', 'RightCheek2', 'RightCheek3',
+                 'LeftJaw1', 'LeftJaw2', 'RightJaw1', 'RightJaw2', 'LeftEye1', 'RightEye1', 'Head1', 'Head2',
+                 'Head3', 'Head4']
+
+ref_actor_pose = np.load(ref_actor_pose)
 af, delta_af = load_training_frames(actor_recording_data_folder,
                                     num_markers=45,
+                                    template_labels=template_labels,
                                     max_num_seq=max_num_seq,
                                     down_sample_factor=4)
-af = np.delete(af, (38, 39, 40, 44), 1)  # remove HEAD markers
-delta_af = np.delete(delta_af, (38, 39, 40, 44), 1)  # remove HEAD markers
+
+ref_actor_pose = ref_actor_pose[:-4, :]  # remove HEAD markers
+af = af[:, :-4, :]  # remove HEAD markers
+delta_af = delta_af[:, :-4, :]  # remove HEAD markers
 print("[data] Finished loading data")
+print("[data] Neutral Blendshape index:", ref_index)
+print("[data] shape ref_actor_pose", np.shape(ref_actor_pose))
 print("[data] shape af:", np.shape(af))
 print("[data] shape sk", np.shape(sk))
 print("[data] shape delta_sk", np.shape(delta_sk))
@@ -113,7 +134,7 @@ print()
 
 # 4) Geometric Constraint
 # build initial guess blendshape using RBF wrap (in delta space)
-delta_gk = get_initial_actor_blendshapes(ref_sk, af[0], sorted_delta_sk)
+delta_gk = get_initial_actor_blendshapes(ref_sk, ref_actor_pose, sorted_delta_sk)
 print("[RBF Wrap] shape delta_gk", np.shape(delta_gk))
 print()
 
