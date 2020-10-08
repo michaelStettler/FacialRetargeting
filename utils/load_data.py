@@ -87,36 +87,6 @@ def load_training_seq(path, seq_name, num_markers, template_labels=None, get_lab
         return None
 
 
-def get_delta_af(training_seq):
-    # get total length
-    tot_frames = 0
-    for s, seq in enumerate(training_seq):
-        tot_frames += np.shape(training_seq[s])[0]
-
-    # declare af and detla_af
-    af = np.zeros((tot_frames, np.shape(training_seq[0])[1], np.shape(training_seq[0])[2]))
-    delta_af = np.zeros((tot_frames - len(training_seq), np.shape(training_seq[0])[1], np.shape(training_seq[0])[2]))  # remove k=0
-
-    # merge all seq into one tensor and compute deltas
-    iterator = 0
-    delta_iterator = 0
-    for s, seq in enumerate(training_seq):
-        shape_seq = np.shape(seq)
-        # compute deltas
-        deltas = compute_delta(seq, seq[0])
-
-        # merge data
-        af[iterator:(iterator+shape_seq[0])] = seq
-        delta_af[delta_iterator:(delta_iterator+shape_seq[0]-1)] = deltas[1:]  # remove delta0
-
-        # iterate num frames
-        iterator += shape_seq[0]
-        delta_iterator += shape_seq[0] - 1  # remove k=0
-
-    print("Finished loading sequences, found a total of", tot_frames, "training frames")
-    return af, delta_af
-
-
 def load_training_frames(path, num_markers=45, template_labels=None, max_num_seq=None, down_sample_factor=None, get_labels=False):
     # get all sequences
     sequences_list = []
@@ -152,12 +122,14 @@ def load_training_frames(path, num_markers=45, template_labels=None, max_num_seq
     print("[loading] Retaining", len(training_seq), "sequence(s)")
     print()
 
-    af, delta_af = get_delta_af(training_seq)
+    # concatenate all the sequence into one dimensional frame length
+    af = np.concatenate(training_seq, axis=0)
+    print("[loading] Finished loading sequences, found a total of", np.shape(af)[0], "training frames")
 
     if get_labels:
-        return af, delta_af, labels
+        return af, labels
     else:
-        return af, delta_af
+        return af
 
 
 if __name__ == '__main__':

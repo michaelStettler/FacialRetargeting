@@ -4,32 +4,42 @@ from tqdm import tqdm
 from scipy.linalg import solve
 
 from utils.load_data import load_training_seq
-from utils.load_data import get_delta_af
+from utils.compute_delta import compute_delta
 from src.ERetarget import ERetarget
 
 #### missing: get blendshapes and marker data from maya here
 
 # define parameters
+ref_actor_pose = 'data/David_neutral_pose.npy'
 load_folder = "data/"
-delta_p_name = "David_based_Louise_personalized_blendshapes_v2.npy"
+delta_p_name = "David_based_Louise_personalized_blendshapes_v3_norm.npy"
 LdV_name = "LdV_louise.npy"
 load_sequence_folder = "D:/MoCap_Data/David/NewSession_labeled/"
-sequence_name = "AngerTrail05.c3d"
+# sequence_name = "AngerTrail05.c3d"
+sequence_name = "HappyTrail01.c3d"
 # sequence_name = "FearTrail03.c3d"
 num_markers = 45
 save_folder = "data/"
-save_name = "weights_David2Louise_retarget_AngerTrail_3000_L1_L2_v2"
+save_name = "weights_David2Louise_retarget_Happy_5000_L1_v3_norm"
 # save_name = "weights_David2Louise_retarget_FearTrail"
-use_L2 = True
+use_L2 = False
 
 # ----------------------- data -------------------------
 # load data
 delta_p = np.load(os.path.join(load_folder, delta_p_name))
 LdV = np.load(os.path.join(load_folder, LdV_name))
+# LdV /= np.linalg.norm(LdV)  # todo normalize dV and not LdV?
+print("max ldv", np.amax(LdV))
 # load sequence to retarget
-sequence = load_training_seq(load_sequence_folder, sequence_name, num_markers)
-af, delta_af = get_delta_af([sequence])
-delta_af = np.delete(delta_af, (38, 39, 40, 44), 1)  # remove HEAD markers
+ref_actor_pose = np.load(ref_actor_pose)
+norm_ref = np.linalg.norm(ref_actor_pose)
+ref_actor_pose /= norm_ref
+af = load_training_seq(load_sequence_folder, sequence_name, num_markers)
+af /= norm_ref
+delta_af = compute_delta(af, ref_actor_pose)
+ref_actor_pose = ref_actor_pose[:-4, :]  # remove HEAD markers
+af = af[:, :-4, :]  # remove HEAD markers
+delta_af = delta_af[:, :-4, :]  # remove HEAD markers
 delta_af = np.reshape(delta_af, (np.shape(delta_af)[0], -1))
 
 print("[data] Finish loading data")
@@ -48,7 +58,7 @@ print()
 eRetarget = ERetarget(delta_p, LdV)
 
 weights = []
-for i in tqdm(range(3000)):
+for i in tqdm(range(4000, 5000)):
 # for i in tqdm(range(1589, 1590)):
 # for i in tqdm(range(num_frames)):
     eRetarget.set_af(delta_af[i])
@@ -56,29 +66,21 @@ for i in tqdm(range(3000)):
     w = solve(A, b)
     weights.append(w)
 
-    # from scipy import optimize
-    # opt = optimize.minimize(eRetarget.get_eRetarget(), w, method="BFGS")
-    # max_weights = np.amax(opt.x)
-    # min_weights = np.amin(opt.x)
-    # max_index = np.argmax(opt.x)
-    # min_index = np.argmin(opt.x)
-    # print("[opt] max weights", max_weights, "at", max_index)
-    # print("[opt] min weights", min_weights, "at", min_index)
-
 print("[Retarget] shape weights", np.shape(weights))
 
 # normalize weights
+weights = np.array(weights)
 max_weights = np.amax(weights)
 min_weights = np.amin(weights)
 max_index = np.argmax(weights)
 min_index = np.argmin(weights)
 print("max weights", max_weights, "at", max_index)
 print("min weights", min_weights, "at", min_index)
-weights = weights / np.amax(weights)
-
+# weights /= np.amax(weights)
 # save
 np.save(os.path.join(save_folder, save_name), weights)
 print("weights save as:", os.path.join(save_folder, save_name))
 print("max weights", np.amax(weights), "at", max_index)
+print("min weights", np.amin(weights), "at", min_index)
 
 

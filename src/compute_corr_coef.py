@@ -21,8 +21,8 @@ def compute_corr_coef(da, ds):
         raise ValueError("[COMPUTE CORR COEF] ds dimensions not supported ({}) instead of 2".format(len(np.shape(ds))))
 
     # compute norms
-    a_norm = np.diag(np.power(np.linalg.norm(da, axis=1), -1))
-    s_norm = np.diag(np.power(np.linalg.norm(ds, axis=1), -1))
+    a_norm = np.diag(np.power(np.linalg.norm(da, axis=1), -1)).astype(np.float32)
+    s_norm = np.diag(np.power(np.linalg.norm(ds, axis=1), -1)).astype(np.float32)
 
     # compute Pearson Correlation Coefficients
     return np.array(a_norm @ da @ ds.T @ s_norm).T

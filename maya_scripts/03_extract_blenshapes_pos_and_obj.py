@@ -6,7 +6,7 @@ import os
 mesh_list_name = "D:/Maya projects/DigitalLuise/scripts/mesh_name_list.npy"
 save_path_pos = 'C:/Users/Michael/PycharmProjects/FacialRetargeting/data/'
 save_path_obj = "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/blendshapes_obj"
-scene_name = "louise_to_David_markers_blendshape_vertices_pos_v2"
+scene_name = "louise_to_David_markers_blendshape_vertices_pos_v3"
 bs_groupe = "Louise_bs_GRP"
 
 # load mesh_list
@@ -22,8 +22,11 @@ print(mesh_list)
 # vtx_list = [414, 77, 205, 399, 1785, 2912, 2718, 2590, 2927, 880, 3393, 23, 34, 2195, 145, 2658, 826, 3339, 539, 3572,
 #             1068, 3581, 97, 2610, 257, 2770, 830, 3343, 753, 3173, 742, 3255, 1988, 1980, 2202, 4477, 4484, 1963,
 #             2209, 4460, 1806]
-vtx_list = [2912, 2718, 2590, 2591, 399, 205, 77, 78, 1779, 401, 1804, 2208, 4304, 2914, 23, 33, 1988, 1821, 50, 4318,
-            4484, 1813, 45, 4310, 1805, 2682, 2782, 169, 215, 2918, 2677, 2763, 405, 410, 250, 3266, 3255, 753, 742,
+# vtx_list = [2912, 2718, 2590, 2591, 399, 205, 77, 78, 1779, 401, 1804, 2208, 4304, 2914, 23, 33, 1988, 1821, 50, 4318,  # V"
+#             4484, 1813, 45, 4310, 1805, 2682, 2782, 169, 215, 2918, 2677, 2763, 405, 410, 250, 3266, 3255, 753, 742,
+#             880, 3393]
+vtx_list = [2912, 2718, 2590, 2591, 399, 205, 77, 78, 1779, 401, 1804, 2208, 4304, 2914, 23, 33, 1988, 1980, 2202, 4634,  # V3
+            4484, 1963, 2209, 4460, 1805, 2682, 2782, 169, 215, 2918, 2677, 2763, 405, 410, 250, 3266, 3255, 753, 742,
             880, 3393]
 
 print("num_markers:", len(vtx_list))
@@ -39,12 +42,12 @@ for mesh in mesh_list:
                                   worldSpace=True))
     bs_vrts_pos.append(vrts_pos)
 
-    # select and save object
-    cmds.select(mesh)
-    cmds.file(os.path.join(save_path_obj, mesh +".obj"), pr=1,
-              typ="OBJexport",
-              es=1,
-              op="groups=0; ptgroups=0; materials=0; smoothing=0; normals=0;")
+    # # select and save object
+    # cmds.select(mesh)
+    # cmds.file(os.path.join(save_path_obj, mesh +".obj"), pr=1,
+    #           typ="OBJexport",
+    #           es=1,
+    #           op="groups=0; ptgroups=0; materials=0; smoothing=0; normals=0;")
 
 print("done processing vertices for (n_blendshapes, n_markers, pos):", np.shape(bs_vrts_pos))
 

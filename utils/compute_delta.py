@@ -11,6 +11,9 @@ def compute_delta(data, ref):
     """
     deltas = []
     for d in data:
-        deltas.append(d - ref)
+        delta = d - ref
+        # check if delta is not filled by only zero -> != ref
+        if np.any(delta):
+            deltas.append(d - ref)
 
     return np.array(deltas)
