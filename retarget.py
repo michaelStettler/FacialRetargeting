@@ -12,7 +12,7 @@ from src.ERetarget import ERetarget
 # define parameters
 ref_actor_pose = 'data/David_neutral_pose.npy'
 load_folder = "data/"
-delta_p_name = "David_based_Louise_personalized_blendshapes_v3_norm.npy"
+delta_p_name = "David_based_Louise_personalized_blendshapes_v3_norm_Ematch.npy"
 LdV_name = "LdV_louise.npy"
 load_sequence_folder = "D:/MoCap_Data/David/NewSession_labeled/"
 # sequence_name = "AngerTrail05.c3d"
@@ -20,7 +20,7 @@ sequence_name = "HappyTrail01.c3d"
 # sequence_name = "FearTrail03.c3d"
 num_markers = 45
 save_folder = "data/"
-save_name = "weights_David2Louise_retarget_Happy_5000_L1_v3_norm"
+save_name = "weights_David2Louise_retarget_Happy_500_L1_v3_norm_Ematch"
 # save_name = "weights_David2Louise_retarget_FearTrail"
 use_L2 = False
 
@@ -32,10 +32,16 @@ LdV = np.load(os.path.join(load_folder, LdV_name))
 print("max ldv", np.amax(LdV))
 # load sequence to retarget
 ref_actor_pose = np.load(ref_actor_pose)
-norm_ref = np.linalg.norm(ref_actor_pose)
-ref_actor_pose /= norm_ref
+# norm_ref = np.linalg.norm(ref_actor_pose)
+min_af = np.amin(ref_actor_pose)
+max_af = np.amax(ref_actor_pose)
+# ref_actor_pose /= norm_ref
+ref_actor_pose -= min_af
+ref_actor_pose /= max_af
 af = load_training_seq(load_sequence_folder, sequence_name, num_markers)
-af /= norm_ref
+# af /= norm_ref
+af -= min_af
+af /= max_af
 delta_af = compute_delta(af, ref_actor_pose)
 ref_actor_pose = ref_actor_pose[:-4, :]  # remove HEAD markers
 af = af[:, :-4, :]  # remove HEAD markers
@@ -58,7 +64,7 @@ print()
 eRetarget = ERetarget(delta_p, LdV)
 
 weights = []
-for i in tqdm(range(4000, 5000)):
+for i in tqdm(range(4000, 4500)):
 # for i in tqdm(range(1589, 1590)):
 # for i in tqdm(range(num_frames)):
     eRetarget.set_af(delta_af[i])
@@ -70,6 +76,7 @@ print("[Retarget] shape weights", np.shape(weights))
 
 # normalize weights
 weights = np.array(weights)
+print(weights[:, 0])
 max_weights = np.amax(weights)
 min_weights = np.amin(weights)
 max_index = np.argmax(weights)

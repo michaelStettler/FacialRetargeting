@@ -10,7 +10,7 @@ mesh_path = 'data/blendshapes_obj'
 ref_mesh_name = 'Louise_Neutral'
 mesh_list_name = "data/sorted_mesh_name_list.npy"  # important to use the sorted list!
 save_path = "data/"
-save_name = "LdV_louise"
+save_name = "LdV_louise_norm"
 
 # load mesh_list
 mesh_list = np.load(mesh_list_name).astype(str)
@@ -19,6 +19,15 @@ print("num_blendshapes", num_blendshapes)
 
 
 def compute_deltaV(mesh, ref_mesh):
+    min_ref = np.amin(ref_mesh.vertices)
+    max_ref = np.amax(ref_mesh.vertices)
+
+    ref_mesh.vertices -= min_ref
+    ref_mesh.vertices /= max_ref
+
+    mesh.vertices -= min_ref
+    mesh.vertices /= max_ref
+
     dv = mesh.vertices - ref_mesh.vertices
     faces = ref_mesh.faces
     return pymesh.form_mesh(dv, faces)

@@ -27,7 +27,7 @@ blendshape_mesh_list_name = "D:/Maya projects/DigitalLuise/scripts/mesh_name_lis
 load_folder = 'data/'
 sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertices_pos_v3.npy"
 save_folder = 'data/'
-save_file_name = "David_based_Louise_personalized_blendshapes_v3_norm.npy"
+save_file_name = "David_based_Louise_personalized_blendshapes_v3_norm_Ematch.npy"
 neutral_pose_name = 'Louise_Neutral'
 ref_actor_pose = 'data/David_neutral_pose.npy'
 max_num_seq = None  # set to None if we want to use all the sequences
@@ -37,7 +37,6 @@ save = True
 # load data
 mesh_list = np.load(blendshape_mesh_list_name).astype(str)
 sk = np.load(os.path.join(load_folder, sparse_blendhsape_vertices_pos_name))  # sparse representation of the blendshapes (vk)
-sk = sk / np.linalg.norm(sk)
 # get Neutral blendhsape pose
 ref_index = None
 bs_index = []
@@ -51,6 +50,18 @@ for m, mesh in enumerate(mesh_list):
 if ref_index is None:
     raise ValueError("No Neutral blendshape pose found!")
 ref_sk = sk[ref_index]
+print("min ref_sk", np.min(ref_sk))
+print("max ref_sk", np.max(ref_sk))
+# sk = sk / np.linalg.norm(sk)
+min_sk = np.amin(ref_sk)
+max_sk = np.amax(ref_sk)
+ref_sk -= min_sk
+ref_sk /= max_sk
+sk -= min_sk
+sk /= max_sk
+# print("np.linalg.norm(sk)", np.linalg.norm(sk))
+print("min sk", np.min(sk))
+print("max sk", np.max(sk))
 delta_sk = compute_delta(sk[bs_index, :, :], ref_sk)
 
 # test if delta_sk has no none-unique entry
@@ -69,14 +80,20 @@ template_labels = ['LeftBrow1', 'LeftBrow2', 'LeftBrow3', 'LeftBrow4', 'RightBro
                  'Head3', 'Head4']
 
 ref_actor_pose = np.load(ref_actor_pose)
-norm_ref = np.linalg.norm(ref_actor_pose)
-ref_actor_pose /= norm_ref
+# norm_ref = np.linalg.norm(ref_actor_pose)
+min_af = np.amin(ref_actor_pose)
+max_af = np.amax(ref_actor_pose)
+# ref_actor_pose /= norm_ref
+ref_actor_pose -= min_af
+ref_actor_pose /= max_af
 af = load_training_frames(actor_recording_data_folder,
                           num_markers=45,
                           template_labels=template_labels,
                           max_num_seq=max_num_seq,
                           down_sample_factor=5)
-af /= norm_ref
+# af /= norm_ref
+af -= min_af
+af /= max_af
 delta_af = compute_delta(af, ref_actor_pose)
 print("delta_af")
 print(delta_af[0])
