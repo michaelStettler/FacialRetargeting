@@ -61,23 +61,13 @@ class EAlign:
         AMeX, AMeY, AMeZ, bMeX, bMeY, bMeZ = self.e_mesh.get_dEmesh()
         ACEGX, ACEGY, ACEGZ, bCEGX, bCEGY, bCEGZ = self.e_ceg.get_dECEG()
 
-        # AX = AMaX + self.alpha * AMeX + self.beta * ACEGX
-        # AY = AMaY + self.alpha * AMeY + self.beta * ACEGY
-        # AZ = AMaZ + self.alpha * AMeZ + self.beta * ACEGZ
-        #
-        # bX = bMaX + self.alpha * bMeX + self.beta * bCEGX
-        # bY = bMaY + self.alpha * bMeY + self.beta * bCEGY
-        # bZ = bMaZ + self.alpha * bMeZ + self.beta * bCEGZ
+        AX = AMaX + self.alpha * AMeX + self.beta * ACEGX
+        AY = AMaY + self.alpha * AMeY + self.beta * ACEGY
+        AZ = AMaZ + self.alpha * AMeZ + self.beta * ACEGZ
 
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("ONLY EMATCH")
-        AX = AMaX
-        AY = AMaY
-        AZ = AMaZ
-
-        bX = bMaX
-        bY = bMaY
-        bZ = bMaZ
+        bX = bMaX + self.alpha * bMeX + self.beta * bCEGX
+        bY = bMaY + self.alpha * bMeY + self.beta * bCEGY
+        bZ = bMaZ + self.alpha * bMeZ + self.beta * bCEGZ
 
         return AX, AY, AZ, bX, bY, bZ
 
