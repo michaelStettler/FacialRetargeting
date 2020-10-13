@@ -120,6 +120,7 @@ def load_training_frames(path, num_markers=45, template_labels=None, max_num_seq
                 seq = seq[sample]
             training_seq.append(seq)
     print("[loading] Retaining", len(training_seq), "sequence(s)")
+    print("length first sequence", np.shape(training_seq[0]))
     print()
 
     # concatenate all the sequence into one dimensional frame length

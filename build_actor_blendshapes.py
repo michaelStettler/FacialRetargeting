@@ -7,6 +7,7 @@ from utils.load_data import load_training_frames
 from utils.compute_delta import compute_delta
 from utils.remove_neutral_blendshape import remove_neutral_blendshape
 from utils.normalize_positions import normalize_positions
+from utils.align_to_head_markers import align_to_head_markers
 from utils.modify_axis import modify_axis
 from utils.re_order_delta import re_order_delta
 from utils.get_key_expressions import get_key_expressions
@@ -49,6 +50,15 @@ ref_sk, min_sk, max_sk = normalize_positions(np.copy(sk[ref_index]), return_min=
 # normalize sk
 sk = normalize_positions(sk, min_pos=min_sk, max_pos=max_sk)
 
+if do_plot:
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    ax.plot_trisurf(ref_sk[:, 0], ref_sk[:, 1], ref_sk[:, 2])
+    ax.set_title("Ref sk")
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
+
 # compute delta sparse blendshape
 delta_sk = compute_delta(sk[bs_index, :, :], ref_sk)
 
@@ -57,14 +67,6 @@ test_unique = np.unique(delta_sk, axis=1)
 if np.shape(test_unique)[0] != np.shape(delta_sk)[0]:
     raise ValueError("delta_sk contains non unique entry! Check your index dictionary to build the sparse blendshape "
                      "(maya_scripts.03_extract_blendshapes_pos_and_obj)")
-
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1, projection='3d')
-ax.plot_trisurf(ref_sk[:, 0], ref_sk[:, 1], ref_sk[:, 2])
-ax.set_title("Ref sk")
-ax.set_xlabel('X Label')
-ax.set_ylabel('Y Label')
-ax.set_zlabel('Z Label')
 
 # get actor animation
 template_labels = ['LeftBrow1', 'LeftBrow2', 'LeftBrow3', 'LeftBrow4', 'RightBrow1', 'RightBrow2', 'RightBrow3',
@@ -75,14 +77,29 @@ template_labels = ['LeftBrow1', 'LeftBrow2', 'LeftBrow3', 'LeftBrow4', 'RightBro
                  'LeftJaw1', 'LeftJaw2', 'RightJaw1', 'RightJaw2', 'LeftEye1', 'RightEye1', 'Head1', 'Head2',
                  'Head3', 'Head4']
 
+# load ref pose
 ref_actor_pose = np.load(ref_actor_pose)
-ref_actor_pose = ref_actor_pose[:-4, :]  # remove HEAD markers
+# align sequence with the head markers
+head_markers = range(np.shape(ref_actor_pose)[0]-4, np.shape(ref_actor_pose)[0]-1)  # use only 3 markers
+ref_actor_pose = align_to_head_markers(ref_actor_pose, ref_idx=head_markers)
 
+# fig = plt.figure()
+# ax = fig.add_subplot(1, 1, 1, projection='3d')
+# ax.scatter(ref_actor_pose[:, 0], ref_actor_pose[:, 1], ref_actor_pose[:, 2])
+# ax.scatter(ref_actor_pose_aligned[:, 0], ref_actor_pose_aligned[:, 1], ref_actor_pose_aligned[:, 2])
+# ax.set_title("A0")
+# ax.set_xlabel('X Label')
+# ax.set_ylabel('Y Label')
+# ax.set_zlabel('Z Label')
+# plt.show()
+
+ref_actor_pose = ref_actor_pose[:-4, :]  # remove HEAD markers
+# modify axis from xzy to xyz to match the scatter blendshape axis orders
+ref_actor_pose = modify_axis(ref_actor_pose, order='xzy2xyz', inverse_z=True)
 # normalize reference (neutral) actor positions
 ref_actor_pose, min_af, max_af = normalize_positions(ref_actor_pose, return_min=True, return_max=True)
-# modify axis from xyz to xzy to match the scatter blendshape axis orders
-ref_actor_pose = modify_axis(ref_actor_pose, order='xzy', inverse_z=True)
 
+# if do_plot:
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1, projection='3d')
 ax.scatter(ref_actor_pose[:, 0], ref_actor_pose[:, 1], ref_actor_pose[:, 2])
@@ -90,18 +107,34 @@ ax.set_title("A0")
 ax.set_xlabel('X Label')
 ax.set_ylabel('Y Label')
 ax.set_zlabel('Z Label')
+
+# load sequence
+af = load_training_frames(actor_recording_data_folder,
+                          num_markers=45,
+                          template_labels=template_labels,
+                          max_num_seq=max_num_seq,
+                          down_sample_factor=5)
+af = align_to_head_markers(af, ref_idx=head_markers)
+af = af[:, :-4, :]  # remove HEAD markers
+# modify axis from xyz to xzy to match the scatter blendshape axis orders
+af = modify_axis(af, order='xzy2xyz', inverse_z=True)
+af = normalize_positions(af, min_pos=min_af, max_pos=max_af)
+print("min max af[:, :, 0]", np.amin(af[:, :, 0]), np.amax(af[:, :, 0]))
+print("min max af[:, :, 1]", np.amin(af[:, :, 2]), np.amax(af[:, :, 1]))
+print("min max af[:, :, 2]", np.amin(af[:, :, 2]), np.amax(af[:, :, 1]))
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1, projection='3d')
+ax.scatter(ref_actor_pose[:, 0], ref_actor_pose[:, 1], ref_actor_pose[:, 2])
+ax.scatter(af[0, :, 0], af[0, :, 1], af[0, :, 2], c='RED')
+ax.scatter(af[5, :, 0], af[5, :, 1], af[5, :, 2], c='RED')
+ax.scatter(af[10, :, 0], af[10, :, 1], af[10, :, 2], c='RED')
+ax.scatter(af[2575, :, 0], af[2575, :, 1], af[2575, :, 2], c='YELLOW')
+ax.set_title("af 0")
+ax.set_xlabel('X Label')
+ax.set_ylabel('Y Label')
+ax.set_zlabel('Z Label')
 plt.show()
 
-# af = load_training_frames(actor_recording_data_folder,
-#                           num_markers=45,
-#                           template_labels=template_labels,
-#                           max_num_seq=max_num_seq,
-#                           down_sample_factor=5)
-# af = af[:, :-4, :]  # remove HEAD markers
-# print("shape af", np.shape(af))
-# # af /= norm_ref
-# af -= min_af
-# af /= max_af
 # delta_af = compute_delta(af, ref_actor_pose)
 # print("delta_af")
 # print(delta_af[0])
