@@ -181,7 +181,7 @@ class ERetarget():
 
         return A, b
 
-    def get_dERetarget(self, L2=False):
+    def get_dERetarget(self):
         """
         Return the equation system to solve ERetarget as formula 16.
         It adds up EFit, EPrior and ESparse in a square matrix A and a vector b as to solve the equation Ax + b
@@ -192,11 +192,7 @@ class ERetarget():
         APrior, bPrior = self.get_dEPrior()
         ASparse, bSparse = self.get_dESparse()
 
-        if L2:
-            A = AFit + self.mu * APrior + self.nu * ASparse + np.eye(self.K)
-            # A = AFit + self.mu * APrior + np.eye(self.K)
-        else:
-            A = AFit + self.mu * APrior + self.nu * ASparse
+        A = AFit + self.mu * APrior + self.nu * ASparse
         b = bFit + self.mu * bPrior + self.nu * bSparse
 
         return A, b

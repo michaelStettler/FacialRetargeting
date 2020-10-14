@@ -23,7 +23,8 @@ class EMesh:
         self.L = []
         for k in range(self.K):
             mesh = triangulate_vertices(delta_gk[k])
-            self.L.append(build_Laplacian(mesh, self.M))
+            L = build_Laplacian(mesh, self.M).todense()
+            self.L.append(np.diag(L))
         self.L = np.array(self.L)
 
     def _emesh(self, dp):
@@ -35,14 +36,17 @@ class EMesh:
         """
         # reshape dp in case it comes as a 1D array
         if len(np.shape(dp)) < 2:
-            dp = np.reshape(dp, (self.K, self.M * 3))
+            dp = np.reshape(dp, (self.K, self.M, 3))
 
-        e_list = []
-        for k in range(self.K):
-            e = np.linalg.norm(self.L[k].dot(np.reshape(dp[k], (-1, 3)) - self.delta_gk[k]), axis=1)**2
-            e_list.append(e)
+        L = np.repeat(np.expand_dims(self.L, axis=2), 3, axis=2)
 
-        return np.sum(e_list) / self.M
+        # compute w = Laplacian * diff
+        w = L * (dp - self.delta_gk)
+
+        # compute norm
+        norm = np.linalg.norm(w, axis=1) ** 2
+
+        return np.sum(norm) / self.M
 
     def get_eMesh(self):
         """
@@ -82,30 +86,13 @@ class EMesh:
         dgkY = self.delta_gk[:, :, 1]
         dgkZ = self.delta_gk[:, :, 2]
 
-        # declare variables
-        A = np.zeros((self.K, self.M))  # get reshaped afterward into (kMxkM)
-        bX = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
-        bY = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
-        bZ = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
+        # build A
+        A = (2/self.M) * np.diag(np.power(self.L, 2).flatten())
 
-        # build A (kM x kM) diagonal matrix and b(kM) vector
-        for k in range(self.K):
-            # build coef.: sum_m'(L^{m, m'}_k)
-            sum_lapl = np.sum(np.power(self.L[k].todense(), 2), axis=0)
-
-            # build A coef. as sum_m'(L^{m, m'}_k)
-            A[k] = sum_lapl
-
-            # build b coef. as sum_m'(L^{m, m'}_k) * g^m_k
-            bX[k] = np.multiply(sum_lapl, np.expand_dims(dgkX[k], axis=1).T)
-            bY[k] = np.multiply(sum_lapl, np.expand_dims(dgkY[k], axis=1).T)
-            bZ[k] = np.multiply(sum_lapl, np.expand_dims(dgkZ[k], axis=1).T)
-
-        # reshape matrix A into diagonal of (kMxkM) and b into vector of (kM,)
-        A = (2/self.M) * np.diag(A.flatten())
-        bX = (2/self.M) * bX.flatten()
-        bY = (2/self.M) * bY.flatten()
-        bZ = (2/self.M) * bZ.flatten()
+        # build b
+        bX = (2/self.M) * np.multiply(np.power(self.L, 2), dgkX).flatten()
+        bY = (2/self.M) * np.multiply(np.power(self.L, 2), dgkY).flatten()
+        bZ = (2/self.M) * np.multiply(np.power(self.L, 2), dgkZ).flatten()
 
         # A = Ax = Ay = Az
         return A, A, A, bX, bY, bZ
@@ -125,7 +112,7 @@ if __name__ == '__main__':
     np.set_printoptions(precision=4, linewidth=250, suppress=True)
     print("--------- test toy example ----------")
     # declare variables
-    n_k = 1  # num_blendshapes
+    n_k = 2  # num_blendshapes
     n_m = 5  # num markers
     n_n = n_m * 3  # num_features (num_markers * 3)
     dgk = np.random.rand(n_k, n_m, 3)
@@ -140,16 +127,19 @@ if __name__ == '__main__':
 
     # control compute e_mesh
     print("compute control e_mesh")
-    emesh_list = []
+    dp = np.reshape(dp, (n_k, n_m, 3))
+    emesh_ctrl = 0
     for k in range(n_k):
         mesh = triangulate_vertices(dgk[k])
-        L = build_Laplacian(mesh, n_m)
-        dv = np.reshape(dp[k], (-1, 3)) - dgk[k]
-        l_op = L.dot(dv)
-        norm = np.linalg.norm(l_op, axis=1)**2
-        emesh_list.append(norm)
+        L = build_Laplacian(mesh, n_m).todense()
 
-    emesh_ctrl = np.sum(emesh_list) / n_m
+        for m in range(n_m):
+            dv = dp[k, m] - dgk[k, m]
+            norm = np.linalg.norm(L[m, m] * dv)**2
+
+            emesh_ctrl += norm
+
+    emesh_ctrl = emesh_ctrl / n_m
     print("emesh_ctrl =", emesh_ctrl)
 
     # compute e_mesh
@@ -158,7 +148,7 @@ if __name__ == '__main__':
     emesh = e_mesh_fn(dp)
     print("emesh =", emesh)
 
-    assert emesh == emesh_ctrl
+    assert emesh.round(5) == emesh_ctrl.round(5)
     print("emesh values are equal")
     print()
 

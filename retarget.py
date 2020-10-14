@@ -7,13 +7,16 @@ import multiprocessing as mp
 from functools import partial
 
 from utils.load_data import load_training_seq
+from utils.normalize_positions import normalize_positions
+from utils.align_to_head_markers import align_to_head_markers
+from utils.modify_axis import modify_axis
 from utils.compute_delta import compute_delta
 from src.ERetarget import ERetarget
 
 
-def get_w(i, eRetarget, delta_af, use_L2):
+def get_w(i, eRetarget, delta_af):
     eRetarget.set_af(delta_af[i])
-    A, b = eRetarget.get_dERetarget(L2=use_L2)
+    A, b = eRetarget.get_dERetarget()
     return solve(A, b)
 
 
@@ -33,9 +36,8 @@ if __name__ == '__main__':
     # sequence_name = "NeutralTrail14.c3d"
     num_markers = 45
     save_folder = "data/"
-    save_name = "weights_David2Louise_retarget_Happy_15000_L1_v3_norm_EMatch"
+    save_name = "weights_David2Louise_retarget_Happy_500_v3"
     # save_name = "weights_David2Louise_retarget_FearTrail"
-    use_L2 = False
 
     # ----------------------- data -------------------------
     # load data
@@ -44,25 +46,28 @@ if __name__ == '__main__':
     LdV = np.load(os.path.join(load_folder, LdV_name))
     # LdV /= np.linalg.norm(LdV)  # todo normalize dV and not LdV?
     print("max ldv", np.amax(LdV))
-    # load sequence to retarget
+
+    # load reference actor pose
     ref_actor_pose = np.load(ref_actor_pose)
-    # norm_ref = np.linalg.norm(ref_actor_pose)
-    min_af = np.amin(ref_actor_pose)
-    max_af = np.amax(ref_actor_pose)
-    # ref_actor_pose /= norm_ref
-    ref_actor_pose -= min_af
-    ref_actor_pose /= max_af
-    af = load_training_seq(load_sequence_folder, sequence_name, num_markers)
-    # af /= norm_ref
-    af -= min_af
-    af /= max_af
-    delta_af = compute_delta(af, ref_actor_pose)
-    print("delta_af")
-    print(delta_af[0])
+    # align sequence with the head markers
+    head_markers = range(np.shape(ref_actor_pose)[0] - 4, np.shape(ref_actor_pose)[0] - 1)  # use only 3 markers
+    ref_actor_pose = align_to_head_markers(ref_actor_pose, ref_idx=head_markers)
     ref_actor_pose = ref_actor_pose[:-4, :]  # remove HEAD markers
+    # modify axis from xzy to xyz to match the scatter blendshape axis orders
+    ref_actor_pose = modify_axis(ref_actor_pose, order='xzy2xyz', inverse_z=True)
+    # normalize reference (neutral) actor positions
+    ref_actor_pose, min_af, max_af = normalize_positions(ref_actor_pose, return_min=True, return_max=True)
+
+    # load sequence to retarget
+    af = load_training_seq(load_sequence_folder, sequence_name, num_markers)
+    af = align_to_head_markers(af, ref_idx=head_markers)
     af = af[:, :-4, :]  # remove HEAD markers
-    delta_af = delta_af[:, :-4, :]  # remove HEAD markers
-    delta_af = np.reshape(delta_af, (np.shape(delta_af)[0], -1))
+    # modify axis from xyz to xzy to match the scatter blendshape axis orders
+    af = modify_axis(af, order='xzy2xyz', inverse_z=True)
+    af = normalize_positions(af, min_pos=min_af, max_pos=max_af)
+
+    # compute delta af
+    delta_af = compute_delta(af, ref_actor_pose, norm_thresh=2)
 
     print("[data] Finish loading data")
     print("[data] shape delta_p", np.shape(delta_p))
@@ -89,7 +94,7 @@ if __name__ == '__main__':
     #     weights.append(w)
 
     # multiprocessing
-    p_get_w = partial(get_w, eRetarget=eRetarget, delta_af=delta_af, use_L2=use_L2)
+    p_get_w = partial(get_w, eRetarget=eRetarget, delta_af=delta_af)
     weights = pool.map(p_get_w, tqdm(range(15000)))
     pool.close()
 

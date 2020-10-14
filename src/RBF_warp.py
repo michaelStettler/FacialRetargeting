@@ -85,7 +85,7 @@ def get_initial_actor_blendshapes(s0, a0, delta_sk):
     # compute initial guess by transforming each character blendshapes delta_sk
     delta_gk = np.zeros(np.shape(delta_sk))
     for k in range(np.shape(delta_sk)[0]):
-        delta_gk[k] = np.multiply(delta_sk[k], W)
+        delta_gk[k] = delta_sk[k] + np.multiply(delta_sk[k], W)
 
     return delta_gk
 
