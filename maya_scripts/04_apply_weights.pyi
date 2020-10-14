@@ -2,7 +2,7 @@ import maya.cmds as cmds
 import numpy as np
 
 # define paremeters for the scenes
-weights_name = "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/weights_David2Louise_retarget_AngerTrail_full_L1_L2_v3.npy"
+weights_name = "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/weights_David2Louise_retarget_Happy_500_v3.npy"
 mesh_list_name = 'C:/Users/Michael/PycharmProjects/FacialRetargeting/data/sorted_mesh_name_list.npy'  # important to use the sorted mesh list!
 neutral_pose = "Louise_Neutral"
 bs_node_name = "bs_node"
@@ -24,7 +24,7 @@ for f in range(np.shape(weights)[0]):
     bs_idx = 0
     for bs in mesh_list_name:
         if bs != neutral_pose:  # remove neutral pose
-            w = max(0, weights[f, bs_idx] - ref_w[bs_idx])
+            w = max(-10, weights[f, bs_idx])
             w = min(w, 10)
             cmds.setAttr(bs_node_name + '.' + bs, w)
             bs_idx += 1

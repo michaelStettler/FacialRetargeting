@@ -29,9 +29,9 @@ np.set_printoptions(precision=4, linewidth=200, suppress=True)
 actor_recording_data_folder = 'D:/MoCap_Data/David/NewSession_labeled/'
 blendshape_mesh_list_name = "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/mesh_name_list.npy"
 load_folder = 'data/'
-sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertices_pos_v3.npy"
+sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertices_pos_v2.npy"
 save_folder = 'data/'
-save_file_name = "David_based_Louise_personalized_blendshapes.npy"
+save_file_name = "David_based_Louise_personalized_blendshapes_v2.npy"
 neutral_pose_name = 'Louise_Neutral'
 ref_actor_pose = 'data/David_neutral_pose.npy'
 max_num_seq = None  # set to None if we want to use all the sequences
@@ -196,17 +196,18 @@ delta_gk = get_initial_actor_blendshapes(ref_sk, ref_actor_pose, sorted_delta_sk
 print("[RBF Wrap] shape delta_gk", np.shape(delta_gk))
 print()
 
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1, projection='3d')
-bs_idx = 0
-sk0 = ref_sk + sorted_delta_sk[bs_idx]
-ax.plot_trisurf(sk0[:, 0], sk0[:, 1], sk0[:, 2], alpha=0.6)
-gk0 = ref_sk + delta_gk[bs_idx]
-ax.plot_trisurf(gk0[:, 0], gk0[:, 1], gk0[:, 2], alpha=0.6)
-ax.set_title("delta sk[{}] vs. initial actor blendshape gk[{}]".format(bs_idx, bs_idx))
-ax.set_xlabel('X Label')
-ax.set_ylabel('Y Label')
-ax.set_zlabel('Z Label')
+if do_plot:
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    bs_idx = 0
+    sk0 = ref_sk + sorted_delta_sk[bs_idx]
+    ax.plot_trisurf(sk0[:, 0], sk0[:, 1], sk0[:, 2], alpha=0.6)
+    gk0 = ref_sk + delta_gk[bs_idx]
+    ax.plot_trisurf(gk0[:, 0], gk0[:, 1], gk0[:, 2], alpha=0.6)
+    ax.set_title("delta sk[{}] vs. initial actor blendshape gk[{}]".format(bs_idx, bs_idx))
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
 
 # 5) build personalized actor-specific blendshapes (delta_p)
 # reshape to match required dimensions
@@ -227,37 +228,35 @@ print("[dp] Solved in:", time.time() - start)
 print("[dp] shape delta_p", np.shape(delta_p))
 print()
 
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1, projection='3d')
-bs_idx = 0
-gk0 = ref_sk + delta_gk[bs_idx]
-ax.plot_trisurf(gk0[:, 0], gk0[:, 1], gk0[:, 2])
-delta_p = np.reshape(delta_p, (K, M, n_dim))
-pk0 = ref_sk + delta_p[bs_idx]
-ax.plot_trisurf(pk0[:, 0], pk0[:, 1], pk0[:, 2], alpha=0.6)
-ax.set_title("initial dgk[{}] vs. optimized dpk[{}]".format(bs_idx, bs_idx))
-ax.set_xlabel('X Label')
-ax.set_ylabel('Y Label')
-ax.set_zlabel('Z Label')
+if do_plot:
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    gk0 = ref_sk + delta_gk[bs_idx]
+    ax.plot_trisurf(gk0[:, 0], gk0[:, 1], gk0[:, 2])
+    delta_p = np.reshape(delta_p, (K, M, n_dim))
+    pk0 = ref_sk + delta_p[bs_idx]
+    ax.plot_trisurf(pk0[:, 0], pk0[:, 1], pk0[:, 2], alpha=0.6)
+    ax.set_title("initial dgk[{}] vs. optimized dpk[{}]".format(bs_idx, bs_idx))
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
 
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1, projection='3d')
-bs_idx = 0
-# ax.plot_trisurf(sk0[:, 0], sk0[:, 1], sk0[:, 2], alpha=0.6)
-ax.plot_trisurf(pk0[:, 0], pk0[:, 1], pk0[:, 2], alpha=1.0)
-ax.set_title("sk[{}] vs. optimized dpk[{}]".format(bs_idx, bs_idx))
-ax.set_xlabel('X Label')
-ax.set_ylabel('Y Label')
-ax.set_zlabel('Z Label')
-plt.show()
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+    # ax.plot_trisurf(sk0[:, 0], sk0[:, 1], sk0[:, 2], alpha=0.6)
+    ax.plot_trisurf(pk0[:, 0], pk0[:, 1], pk0[:, 2], alpha=1.0)
+    ax.set_title("sk[{}] vs. optimized dpk[{}]".format(bs_idx, bs_idx))
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
 
-#
-# # 6) save delta_p ans sorted_mesh_list
-# if save:
-#     np.save(save_folder + save_file_name, delta_p)
-#     np.save(save_folder + 'sorted_mesh_name_list', sorted_mesh_list)
-#     print("[save] saved delta_pk (actor specifik blendshapes), shape:", np.shape(delta_p))
-#     print("[save] saved sorted_mesh_list, shape:", np.shape(delta_p))
-#
-# if do_plot:
-#     plt.show()
+
+# 6) save delta_p ans sorted_mesh_list
+if save:
+    np.save(save_folder + save_file_name, delta_p)
+    np.save(save_folder + 'sorted_mesh_name_list', sorted_mesh_list)
+    print("[save] saved delta_pk (actor specifik blendshapes), shape:", np.shape(delta_p))
+    print("[save] saved sorted_mesh_list, shape:", np.shape(delta_p))
+
+if do_plot:
+    plt.show()

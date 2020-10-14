@@ -27,17 +27,27 @@ if __name__ == '__main__':
     # define parameters
     ref_actor_pose = 'data/David_neutral_pose.npy'
     load_folder = "data/"
-    delta_p_name = "David_based_Louise_personalized_blendshapes_v3_norm_EMatch.npy"
+    delta_p_name = "David_based_Louise_personalized_blendshapes_v3.npy"
     LdV_name = "LdV_louise.npy"
     load_sequence_folder = "D:/MoCap_Data/David/NewSession_labeled/"
-    # sequence_name = "AngerTrail05.c3d"
-    sequence_name = "HappyTrail01.c3d"
+    sequence_name = "AngerTrail05.c3d"
+    # sequence_name = "HappyTrail01.c3d"
     # sequence_name = "FearTrail03.c3d"
     # sequence_name = "NeutralTrail14.c3d"
     num_markers = 45
     save_folder = "data/"
-    save_name = "weights_David2Louise_retarget_Happy_500_v3"
+    save_name = "weights_David2Louise_retarget_Angry_5000_v3"
     # save_name = "weights_David2Louise_retarget_FearTrail"
+
+    # get actor animation
+    template_labels = ['LeftBrow1', 'LeftBrow2', 'LeftBrow3', 'LeftBrow4', 'RightBrow1', 'RightBrow2', 'RightBrow3',
+                       'RightBrow4', 'Nose1', 'Nose2', 'Nose3', 'Nose4', 'Nose5', 'Nose6', 'Nose7', 'Nose8',
+                       'UpperMouth1', 'UpperMouth2', 'UpperMouth3', 'UpperMouth4', 'UpperMouth5', 'LowerMouth1',
+                       'LowerMouth2', 'LowerMouth3', 'LowerMouth4', 'LeftOrbi1', 'LeftOrbi2', 'RightOrbi1',
+                       'RightOrbi2',
+                       'LeftCheek1', 'LeftCheek2', 'LeftCheek3', 'RightCheek1', 'RightCheek2', 'RightCheek3',
+                       'LeftJaw1', 'LeftJaw2', 'RightJaw1', 'RightJaw2', 'LeftEye1', 'RightEye1', 'Head1', 'Head2',
+                       'Head3', 'Head4']
 
     # ----------------------- data -------------------------
     # load data
@@ -59,7 +69,7 @@ if __name__ == '__main__':
     ref_actor_pose, min_af, max_af = normalize_positions(ref_actor_pose, return_min=True, return_max=True)
 
     # load sequence to retarget
-    af = load_training_seq(load_sequence_folder, sequence_name, num_markers)
+    af = load_training_seq(load_sequence_folder, sequence_name, num_markers, template_labels=template_labels)
     af = align_to_head_markers(af, ref_idx=head_markers)
     af = af[:, :-4, :]  # remove HEAD markers
     # modify axis from xyz to xzy to match the scatter blendshape axis orders
@@ -68,6 +78,18 @@ if __name__ == '__main__':
 
     # compute delta af
     delta_af = compute_delta(af, ref_actor_pose, norm_thresh=2)
+    delta_af = np.reshape(delta_af, (np.shape(delta_af)[0], -1))
+
+    # import matplotlib.pyplot as plt
+    # fig = plt.figure()
+    # ax = fig.add_subplot(1, 1, 1, projection='3d')
+    # ax.scatter(ref_actor_pose[:, 0], ref_actor_pose[:, 1], ref_actor_pose[:, 2])
+    # ax.scatter(af[0, :, 0], af[0, :, 1], af[0, :, 2])
+    # ax.set_title("ref pose A0 normalized")
+    # ax.set_xlabel('X Label')
+    # ax.set_ylabel('Y Label')
+    # ax.set_zlabel('Z Label')
+    # plt.show()
 
     print("[data] Finish loading data")
     print("[data] shape delta_p", np.shape(delta_p))
@@ -75,7 +97,7 @@ if __name__ == '__main__':
     print("[data] shape delta_af", np.shape(delta_af))
     num_frames = np.shape(delta_af)[0]
     num_blendshapes = np.shape(delta_p)[0]
-    num_markers = np.shape(delta_p)[1] / 3
+    num_markers = int(np.shape(delta_p)[1] / 3)
     print("[data] num frames:", num_frames)
     print("[data] num blendshapes:", num_blendshapes)
     print("[data] num_markers:", num_markers)
@@ -95,15 +117,13 @@ if __name__ == '__main__':
 
     # multiprocessing
     p_get_w = partial(get_w, eRetarget=eRetarget, delta_af=delta_af)
-    weights = pool.map(p_get_w, tqdm(range(15000)))
+    weights = pool.map(p_get_w, tqdm(range(5000)))
     pool.close()
 
     print("[Retarget] shape weights", np.shape(weights))
 
     # normalize weights
     weights = np.array(weights)
-    print("shape weights", np.shape(weights))
-    print(weights[:, 0])
     max_weights = np.amax(weights)
     min_weights = np.amin(weights)
     max_index = np.argmax(weights)
@@ -111,6 +131,7 @@ if __name__ == '__main__':
     print("max weights", max_weights, "at", max_index)
     print("min weights", min_weights, "at", min_index)
     # weights /= np.amax(weights)
+
     # save
     np.save(os.path.join(save_folder, save_name), weights)
     print("weights save as:", os.path.join(save_folder, save_name))
