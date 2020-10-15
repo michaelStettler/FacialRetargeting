@@ -9,7 +9,7 @@ def normalize_positions(pos, min_pos=None, max_pos=None, return_min=False, retur
 
     if max_pos is None:
         # max_sk = np.repeat(np.expand_dims(np.amax(ref_sk, axis=0), axis=0), np.shape(ref_sk)[0], axis=0)
-        max_pos = np.amax(pos)  # normalize only but the max to keep ratio # todo check if any difference?
+        max_pos = np.amax(pos)  # normalize only by the max to keep ratio # todo check if any difference?
 
     pos /= max_pos
 
