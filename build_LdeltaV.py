@@ -3,7 +3,12 @@ import numpy as np
 import os
 import time
 
-from utils.normalize_positions import normalize_positions
+# need it to run with python2 since pymesh was installed in my python2...
+import sys
+sys.path.insert(0, 'utils/')
+sys.path.append('utils/')
+
+from normalize_positions import normalize_positions
 
 np.set_printoptions(precision=4, linewidth=250, suppress=True)
 
@@ -20,17 +25,17 @@ num_blendshapes = len(mesh_list)
 print("num_blendshapes", num_blendshapes)
 
 
-def compute_deltaV(mesh, ref_mesh):
-    dv = mesh.vertices - ref_mesh.vertices
-    faces = ref_mesh.faces
+def compute_deltaV(mesh, ref_mesh, faces):
+    dv = mesh - ref_mesh
 
     return pymesh.form_mesh(dv, faces)
 
 
 def build_L_deltaV(mesh_list, path, ref_mesh_name):
     ref_mesh = pymesh.load_mesh(os.path.join(path, ref_mesh_name + ".obj"))
-    ref_mesh, min_mesh, max_mesh = normalize_positions(ref_mesh, return_min=True, return_max=True)
-    n_vertices = len(ref_mesh.vertices)
+    faces = ref_mesh.faces
+    ref_mesh_vertices, min_mesh, max_mesh = normalize_positions(np.copy(ref_mesh.vertices), return_min=True, return_max=True)
+    n_vertices = len(ref_mesh_vertices)
     print("n_vertices:", n_vertices)
 
     LdVs = []
@@ -38,9 +43,9 @@ def build_L_deltaV(mesh_list, path, ref_mesh_name):
         # compute dV
         if mesh_name != ref_mesh_name:
             mesh = pymesh.load_mesh(os.path.join(path, mesh_name+".obj"))
-            mesh = normalize_positions(mesh, min_pos=min_mesh, max_pos=max_mesh)
+            mesh_vertices = normalize_positions(np.copy(mesh.vertices), min_pos=min_mesh, max_pos=max_mesh)
 
-            dv_mesh = compute_deltaV(mesh, ref_mesh)
+            dv_mesh = compute_deltaV(mesh_vertices, ref_mesh_vertices, faces)
 
             # compute Laplacians
             assembler = pymesh.Assembler(mesh)
