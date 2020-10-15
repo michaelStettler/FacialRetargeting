@@ -27,16 +27,16 @@ if __name__ == '__main__':
     # define parameters
     ref_actor_pose = 'data/David_neutral_pose.npy'
     load_folder = "data/"
-    delta_p_name = "David_based_Louise_personalized_blendshapes_v3.npy"
+    delta_p_name = "David_based_Louise_personalized_blendshapes_v2_NewEMesh_alpha_0.001.npy"
     LdV_name = "LdV_louise.npy"
     load_sequence_folder = "D:/MoCap_Data/David/NewSession_labeled/"
-    sequence_name = "AngerTrail05.c3d"
+    # sequence_name = "AngerTrail05.c3d"
     # sequence_name = "HappyTrail01.c3d"
-    # sequence_name = "FearTrail03.c3d"
+    sequence_name = "FearTrail03.c3d"
     # sequence_name = "NeutralTrail14.c3d"
     num_markers = 45
     save_folder = "data/"
-    save_name = "weights_David2Louise_retarget_Angry_5000_v3"
+    save_name = "weights_David2Louise_retarget_Fear_15000_v2_new_Emesh_alpha_0.001_nu_3"
     # save_name = "weights_David2Louise_retarget_FearTrail"
 
     # get actor animation
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     print()
 
     # ----------------------- ERetarget -------------------------
-    eRetarget = ERetarget(delta_p, LdV)
+    eRetarget = ERetarget(delta_p, LdV, mu=0.3, nu=3)
 
     # weights = []
     # for i in tqdm(range(500)):
@@ -117,7 +117,7 @@ if __name__ == '__main__':
 
     # multiprocessing
     p_get_w = partial(get_w, eRetarget=eRetarget, delta_af=delta_af)
-    weights = pool.map(p_get_w, tqdm(range(5000)))
+    weights = pool.map(p_get_w, tqdm(range(15000)))
     pool.close()
 
     print("[Retarget] shape weights", np.shape(weights))

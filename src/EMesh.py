@@ -86,38 +86,38 @@ class EMesh:
         dgkY = self.delta_gk[:, :, 1]
         dgkZ = self.delta_gk[:, :, 2]
 
-        # # build A
-        # A = (2/self.M) * np.diag(np.power(self.L, 2).flatten())
+        # build A
+        A = (2/self.M) * np.diag(np.power(self.L, 2).flatten())
+
+        # build b
+        bX = (2/self.M) * np.multiply(np.power(self.L, 2), dgkX).flatten()
+        bY = (2/self.M) * np.multiply(np.power(self.L, 2), dgkY).flatten()
+        bZ = (2/self.M) * np.multiply(np.power(self.L, 2), dgkZ).flatten()
+
+        # # declare variables
+        # A = np.zeros((self.K, self.M))  # get reshaped afterward into (kMxkM)
+        # bX = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
+        # bY = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
+        # bZ = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
         #
-        # # build b
-        # bX = (2/self.M) * np.multiply(np.power(self.L, 2), dgkX).flatten()
-        # bY = (2/self.M) * np.multiply(np.power(self.L, 2), dgkY).flatten()
-        # bZ = (2/self.M) * np.multiply(np.power(self.L, 2), dgkZ).flatten()
-
-        # declare variables
-        A = np.zeros((self.K, self.M))  # get reshaped afterward into (kMxkM)
-        bX = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
-        bY = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
-        bZ = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
-
-        # build A (kM x kM) diagonal matrix and b(kM) vector
-        for k in range(self.K):
-            # build coef.: sum_m'(L^{m, m'}_k)
-            sum_lapl = np.sum(np.power(self.L[k], 2), axis=0)
-
-            # build A coef. as sum_m'(L^{m, m'}_k)
-            A[k] = sum_lapl
-
-            # build b coef. as sum_m'(L^{m, m'}_k) * g^m_k
-            bX[k] = np.multiply(sum_lapl, np.expand_dims(dgkX[k], axis=1).T)
-            bY[k] = np.multiply(sum_lapl, np.expand_dims(dgkY[k], axis=1).T)
-            bZ[k] = np.multiply(sum_lapl, np.expand_dims(dgkZ[k], axis=1).T)
-
-        # reshape matrix A into diagonal of (kMxkM) and b into vector of (kM,)
-        A = (2/self.M) * np.diag(A.flatten())
-        bX = (2/self.M) * bX.flatten()
-        bY = (2/self.M) * bY.flatten()
-        bZ = (2/self.M) * bZ.flatten()
+        # # build A (kM x kM) diagonal matrix and b(kM) vector
+        # for k in range(self.K):
+        #     # build coef.: sum_m'(L^{m, m'}_k)
+        #     sum_lapl = np.sum(np.power(self.L[k], 2), axis=0)
+        #
+        #     # build A coef. as sum_m'(L^{m, m'}_k)
+        #     A[k] = sum_lapl
+        #
+        #     # build b coef. as sum_m'(L^{m, m'}_k) * g^m_k
+        #     bX[k] = np.multiply(sum_lapl, np.expand_dims(dgkX[k], axis=1).T)
+        #     bY[k] = np.multiply(sum_lapl, np.expand_dims(dgkY[k], axis=1).T)
+        #     bZ[k] = np.multiply(sum_lapl, np.expand_dims(dgkZ[k], axis=1).T)
+        #
+        # # reshape matrix A into diagonal of (kMxkM) and b into vector of (kM,)
+        # A = (2/self.M) * np.diag(A.flatten())
+        # bX = (2/self.M) * bX.flatten()
+        # bY = (2/self.M) * bY.flatten()
+        # bZ = (2/self.M) * bZ.flatten()
 
         # A = Ax = Ay = Az
         return A, A, A, bX, bY, bZ

@@ -29,14 +29,15 @@ np.set_printoptions(precision=4, linewidth=200, suppress=True)
 actor_recording_data_folder = 'D:/MoCap_Data/David/NewSession_labeled/'
 blendshape_mesh_list_name = "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/mesh_name_list.npy"
 load_folder = 'data/'
-sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertices_pos_v3.npy"
+sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertices_pos_v2.npy"
 save_folder = 'data/'
-save_file_name = "David_based_Louise_personalized_blendshapes_v3.npy"
+save_file_name = "David_based_Louise_personalized_blendshapes_v2_NewEMesh_alpha_0.0001.npy"
 neutral_pose_name = 'Louise_Neutral'
 ref_actor_pose = 'data/David_neutral_pose.npy'
 max_num_seq = None  # set to None if we want to use all the sequences
-do_plot = False
+do_plot = True
 save = True
+load_pre_processed = True
 
 # load data
 mesh_list = np.load(blendshape_mesh_list_name).astype(str)
@@ -80,7 +81,7 @@ template_labels = ['LeftBrow1', 'LeftBrow2', 'LeftBrow3', 'LeftBrow4', 'RightBro
 # load ref pose
 ref_actor_pose = np.load(ref_actor_pose)
 # align sequence with the head markers
-head_markers = range(np.shape(ref_actor_pose)[0]-4, np.shape(ref_actor_pose)[0]-1)  # use only 3 markers
+head_markers = range(np.shape(ref_actor_pose)[0] - 4, np.shape(ref_actor_pose)[0] - 1)  # use only 3 markers
 ref_actor_pose = align_to_head_markers(ref_actor_pose, ref_idx=head_markers)
 
 if do_plot:
@@ -107,36 +108,42 @@ if do_plot:
     ax.set_ylabel('Y Label')
     ax.set_zlabel('Z Label')
 
-# load sequence
-af = load_training_frames(actor_recording_data_folder,
-                          num_markers=45,
-                          template_labels=template_labels,
-                          max_num_seq=max_num_seq,
-                          down_sample_factor=5)
-af = align_to_head_markers(af, ref_idx=head_markers)
-af = af[:, :-4, :]  # remove HEAD markers
-# modify axis from xyz to xzy to match the scatter blendshape axis orders
-af = modify_axis(af, order='xzy2xyz', inverse_z=True)
-af = normalize_positions(af, min_pos=min_af, max_pos=max_af)
+if load_pre_processed:
+    delta_af = np.load("data/training_delta_af.npy")
+    tilda_ckf = np.load("data/training_tilda_ckf.npy")
+else:
+    # load sequence
+    af = load_training_frames(actor_recording_data_folder,
+                              num_markers=45,
+                              template_labels=template_labels,
+                              max_num_seq=max_num_seq,
+                              down_sample_factor=5)
+    af = align_to_head_markers(af, ref_idx=head_markers)
+    af = af[:, :-4, :]  # remove HEAD markers
+    # modify axis from xyz to xzy to match the scatter blendshape axis orders
+    af = modify_axis(af, order='xzy2xyz', inverse_z=True)
+    af = normalize_positions(af, min_pos=min_af, max_pos=max_af)
 
-if do_plot:
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1, projection='3d')
-    ax.scatter(ref_actor_pose[:, 0], ref_actor_pose[:, 1], ref_actor_pose[:, 2])
-    ax.scatter(af[0, :, 0], af[0, :, 1], af[0, :, 2], c='RED')
-    # ax.scatter(af[5, :, 0], af[5, :, 1], af[5, :, 2], c='RED')
-    # ax.scatter(af[10, :, 0], af[10, :, 1], af[10, :, 2], c='RED')
-    # ax.scatter(af[2575, :, 0], af[2575, :, 1], af[2575, :, 2], c='YELLOW')
-    ax.set_title("ref_pose A0 vs. af[0]")
-    ax.set_xlabel('X Label')
-    ax.set_ylabel('Y Label')
-    ax.set_zlabel('Z Label')
+    if do_plot:
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1, projection='3d')
+        ax.scatter(ref_actor_pose[:, 0], ref_actor_pose[:, 1], ref_actor_pose[:, 2])
+        ax.scatter(af[0, :, 0], af[0, :, 1], af[0, :, 2], c='RED')
+        # ax.scatter(af[5, :, 0], af[5, :, 1], af[5, :, 2], c='RED')
+        # ax.scatter(af[10, :, 0], af[10, :, 1], af[10, :, 2], c='RED')
+        # ax.scatter(af[2575, :, 0], af[2575, :, 1], af[2575, :, 2], c='YELLOW')
+        ax.set_title("ref_pose A0 vs. af[0]")
+        ax.set_xlabel('X Label')
+        ax.set_ylabel('Y Label')
+        ax.set_zlabel('Z Label')
 
-delta_af = compute_delta(af, ref_actor_pose, norm_thresh=2)
+    delta_af = compute_delta(af, ref_actor_pose, norm_thresh=2)
+
+    print("[data] shape af:", np.shape(af))
+
 print("[data] Finished loading data")
 print("[data] Neutral Blendshape index:", ref_index)
 print("[data] shape ref_actor_pose", np.shape(ref_actor_pose))
-print("[data] shape af:", np.shape(af))
 print("[data] shape delta af:", np.shape(delta_af))
 print("[data] shape sk", np.shape(sk))
 print("[data] shape delta_sk", np.shape(delta_sk))
@@ -158,31 +165,34 @@ sorted_mesh_list = np.array(cleaned_mesh_list)[sorted_index]
 print("[Pre-processing] shape sorted_delta_sk", np.shape(sorted_delta_sk))
 print("[Pre-processing] len sorted_mesh_list", len(sorted_mesh_list))
 
-# measure similarity between character blendshapes and actor's capture performance
-ckf = compute_corr_coef(np.reshape(delta_af, (np.shape(delta_af)[0], -1)),
-                        np.reshape(sorted_delta_sk, (np.shape(sorted_delta_sk)[0], -1)))
+if not load_pre_processed:
+    # measure similarity between character blendshapes and actor's capture performance
+    ckf = compute_corr_coef(np.reshape(delta_af, (np.shape(delta_af)[0], -1)),
+                            np.reshape(sorted_delta_sk, (np.shape(sorted_delta_sk)[0], -1)))
 
-if do_plot:
-    plot_similarities(ckf, "Fig. 7: Motion space similarity")
+    if do_plot:
+        plot_similarities(ckf, "Fig. 7: Motion space similarity")
 
-# contrast enhancement
-tk = compute_trust_values(np.reshape(sorted_delta_sk, (np.shape(sorted_delta_sk)[0], -1)), do_plot=do_plot)
-tilda_ckf = compute_tilda_corr_coef(ckf, tk)
-print("[Pre-processing] shape ckf", np.shape(ckf))
-print("[Pre-processing] shape tk", np.shape(tk))
-print("[Pre-processing] shape tilda_ckf", np.shape(tilda_ckf))
-print()
+    # contrast enhancement
+    tk = compute_trust_values(np.reshape(sorted_delta_sk, (np.shape(sorted_delta_sk)[0], -1)), do_plot=do_plot)
+    tilda_ckf = compute_tilda_corr_coef(ckf, tk)
+    print("[Pre-processing] shape ckf", np.shape(ckf))
+    print("[Pre-processing] shape tk", np.shape(tk))
+    print("[Pre-processing] shape tilda_ckf", np.shape(tilda_ckf))
+    print()
 
-# 2) Key Expression Extraction
-key_expressions_idx = get_key_expressions(tilda_ckf, ksize=3, theta=2, do_plot=do_plot)
-F = len(key_expressions_idx)
-delta_af = delta_af[key_expressions_idx, :, :]
-tilda_ckf = tilda_ckf[:, key_expressions_idx]
-print("[Key Expr. Extract.] Keep", F, "frames")
-print("[Key Expr. Extract.] shape key_expressions", np.shape(key_expressions_idx))
-print("[Key Expr. Extract.] shape delta_af", np.shape(delta_af))
-print("[Key Expr. Extract.] shape tilda_ckf", np.shape(tilda_ckf))
-print()
+    # 2) Key Expression Extraction
+    key_expressions_idx = get_key_expressions(tilda_ckf, ksize=3, theta=2, do_plot=do_plot)
+    F = len(key_expressions_idx)
+    delta_af = delta_af[key_expressions_idx, :, :]
+    tilda_ckf = tilda_ckf[:, key_expressions_idx]
+    print("[Key Expr. Extract.] Keep", F, "frames")
+    print("[Key Expr. Extract.] shape key_expressions", np.shape(key_expressions_idx))
+    print("[Key Expr. Extract.] shape delta_af", np.shape(delta_af))
+    print("[Key Expr. Extract.] shape tilda_ckf", np.shape(tilda_ckf))
+    print()
+    np.save("data/training_delta_af", delta_af)
+    np.save("data/training_tilda_ckf", tilda_ckf)
 
 # 3) Manifold Alignment
 # built soft max vector
@@ -220,13 +230,20 @@ print("[dp] shape delta_af:", np.shape(delta_af))
 print("[dp] shape delta_gk:", np.shape(delta_gk))
 print("[dp] shape delta_sk", np.shape(sorted_delta_sk))
 # declare E_Align
-e_align = EAlign(tilda_ckf, uk, delta_af, delta_gk, sorted_delta_sk)
+e_align = EAlign(tilda_ckf, uk, delta_af, delta_gk, sorted_delta_sk, alpha=0.0001)
 # compute personalized actor-specific blendshapes
 start = time.time()
 delta_p = e_align.compute_actor_specific_blendshapes(vectorized=False)
 print("[dp] Solved in:", time.time() - start)
 print("[dp] shape delta_p", np.shape(delta_p))
 print()
+
+# 6) save delta_p ans sorted_mesh_list
+if save:
+    np.save(save_folder + save_file_name, delta_p)
+    np.save(save_folder + 'sorted_mesh_name_list', sorted_mesh_list)
+    print("[save] saved delta_pk (actor specifik blendshapes), shape:", np.shape(delta_p))
+    print("[save] saved sorted_mesh_list, shape:", np.shape(delta_p))
 
 if do_plot:
     fig = plt.figure()
@@ -249,14 +266,6 @@ if do_plot:
     ax.set_xlabel('X Label')
     ax.set_ylabel('Y Label')
     ax.set_zlabel('Z Label')
-
-
-# 6) save delta_p ans sorted_mesh_list
-if save:
-    np.save(save_folder + save_file_name, delta_p)
-    np.save(save_folder + 'sorted_mesh_name_list', sorted_mesh_list)
-    print("[save] saved delta_pk (actor specifik blendshapes), shape:", np.shape(delta_p))
-    print("[save] saved sorted_mesh_list, shape:", np.shape(delta_p))
 
 if do_plot:
     plt.show()
