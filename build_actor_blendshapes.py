@@ -29,9 +29,9 @@ np.set_printoptions(precision=4, linewidth=200, suppress=True)
 actor_recording_data_folder = 'D:/MoCap_Data/David/NewSession_labeled/'
 blendshape_mesh_list_name = "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/mesh_name_list.npy"
 load_folder = 'data/'
-sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertices_pos_v2.npy"
+sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertices_pos_v3.npy"
 save_folder = 'data/'
-save_file_name = "David_based_Louise_personalized_blendshapes_v2.npy"
+save_file_name = "David_based_Louise_personalized_blendshapes_v3.npy"
 neutral_pose_name = 'Louise_Neutral'
 ref_actor_pose = 'data/David_neutral_pose.npy'
 max_num_seq = None  # set to None if we want to use all the sequences
@@ -220,7 +220,7 @@ print("[dp] shape delta_af:", np.shape(delta_af))
 print("[dp] shape delta_gk:", np.shape(delta_gk))
 print("[dp] shape delta_sk", np.shape(sorted_delta_sk))
 # declare E_Align
-e_align = EAlign(tilda_ckf, uk, delta_af, delta_gk, sorted_delta_sk, alpha=0.0001)
+e_align = EAlign(tilda_ckf, uk, delta_af, delta_gk, sorted_delta_sk)
 # compute personalized actor-specific blendshapes
 start = time.time()
 delta_p = e_align.compute_actor_specific_blendshapes(vectorized=False)
