@@ -15,16 +15,25 @@ class EMesh:
     n:= num_features
 
     """
-    def __init__(self, delta_gk):
+    def __init__(self, delta_gk, ref):
         self.delta_gk = delta_gk
         self.K = np.shape(self.delta_gk)[0]
         self.M = np.shape(self.delta_gk)[1]
 
         self.L = []
         for k in range(self.K):
-            mesh = triangulate_vertices(delta_gk[k])
+            # points = delta_gk[k]
+            # mesh = triangulate_vertices(points)
+            # L = build_Laplacian(mesh, self.M).todense()
+            # # self.L.append(np.diag(L))
+            # self.L.append(L)
+
+            points = ref + delta_gk[k]
+            mesh = triangulate_vertices(points)
             L = build_Laplacian(mesh, self.M).todense()
-            self.L.append(np.diag(L))
+            # self.L2.append(np.diag(L))
+            self.L.append(L)
+        # self.L = np.array(self.L)
         self.L = np.array(self.L)
 
     def _emesh(self, dp):
@@ -38,15 +47,25 @@ class EMesh:
         if len(np.shape(dp)) < 2:
             dp = np.reshape(dp, (self.K, self.M, 3))
 
-        L = np.repeat(np.expand_dims(self.L, axis=2), 3, axis=2)
+        # L = np.repeat(np.expand_dims(self.L, axis=2), 3, axis=2)
+        #
+        # # compute w = Laplacian * diff
+        # w = L * (dp - self.delta_gk)
+        #
+        # # compute norm
+        # norm = np.linalg.norm(w, axis=1) ** 2
+        #
+        # return np.sum(norm) / self.M
 
-        # compute w = Laplacian * diff
-        w = L * (dp - self.delta_gk)
+        e_list = []
+        for k in range(self.K):
+            sum_Lk = np.repeat(np.expand_dims(np.sum(np.power(self.L[k], 2), axis=0), 1), 3, axis=1)
+            dv = np.reshape(dp[k], (-1, 3)) - self.delta_gk[k]
+            e = np.linalg.norm(sum_Lk * dv)**2
+            e_list.append(e)
 
-        # compute norm
-        norm = np.linalg.norm(w, axis=1) ** 2
+        return np.sum(e_list) / self.M
 
-        return np.sum(norm) / self.M
 
     def get_eMesh(self):
         """
@@ -86,38 +105,38 @@ class EMesh:
         dgkY = self.delta_gk[:, :, 1]
         dgkZ = self.delta_gk[:, :, 2]
 
-        # build A
-        A = (2/self.M) * np.diag(np.power(self.L, 2).flatten())
+        # # build A
+        # A = (2/self.M) * np.diag(np.power(self.L, 2).flatten())
+        #
+        # # build b
+        # bX = (2/self.M) * np.multiply(np.power(self.L, 2), dgkX).flatten()
+        # bY = (2/self.M) * np.multiply(np.power(self.L, 2), dgkY).flatten()
+        # bZ = (2/self.M) * np.multiply(np.power(self.L, 2), dgkZ).flatten()
 
-        # build b
-        bX = (2/self.M) * np.multiply(np.power(self.L, 2), dgkX).flatten()
-        bY = (2/self.M) * np.multiply(np.power(self.L, 2), dgkY).flatten()
-        bZ = (2/self.M) * np.multiply(np.power(self.L, 2), dgkZ).flatten()
+        # declare variables
+        A = np.zeros((self.K, self.M))  # get reshaped afterward into (kMxkM)
+        bX = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
+        bY = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
+        bZ = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
 
-        # # declare variables
-        # A = np.zeros((self.K, self.M))  # get reshaped afterward into (kMxkM)
-        # bX = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
-        # bY = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
-        # bZ = np.zeros((self.K, self.M))  # get reshaped afterward into (kM,)
-        #
-        # # build A (kM x kM) diagonal matrix and b(kM) vector
-        # for k in range(self.K):
-        #     # build coef.: sum_m'(L^{m, m'}_k)
-        #     sum_lapl = np.sum(np.power(self.L[k], 2), axis=0)
-        #
-        #     # build A coef. as sum_m'(L^{m, m'}_k)
-        #     A[k] = sum_lapl
-        #
-        #     # build b coef. as sum_m'(L^{m, m'}_k) * g^m_k
-        #     bX[k] = np.multiply(sum_lapl, np.expand_dims(dgkX[k], axis=1).T)
-        #     bY[k] = np.multiply(sum_lapl, np.expand_dims(dgkY[k], axis=1).T)
-        #     bZ[k] = np.multiply(sum_lapl, np.expand_dims(dgkZ[k], axis=1).T)
-        #
-        # # reshape matrix A into diagonal of (kMxkM) and b into vector of (kM,)
-        # A = (2/self.M) * np.diag(A.flatten())
-        # bX = (2/self.M) * bX.flatten()
-        # bY = (2/self.M) * bY.flatten()
-        # bZ = (2/self.M) * bZ.flatten()
+        # build A (k x M) matrix and b(k x M) vector
+        for k in range(self.K):
+            # build coef.: sum_m'(L^{m, m'}_k)
+            sum_lapl = np.sum(np.power(self.L[k], 2), axis=0)
+
+            # build A coef. as sum_m'(L^{m, m'}_k)
+            A[k] = sum_lapl
+
+            # build b coef. as sum_m'(L^{m, m'}_k) * g^m_k
+            bX[k] = np.multiply(sum_lapl, np.expand_dims(dgkX[k], axis=1).T)
+            bY[k] = np.multiply(sum_lapl, np.expand_dims(dgkY[k], axis=1).T)
+            bZ[k] = np.multiply(sum_lapl, np.expand_dims(dgkZ[k], axis=1).T)
+
+        # reshape matrix A into diagonal of (kMxkM) and b into vector of (kM,)
+        A = (2/self.M) * np.diag(A.flatten())
+        bX = (2/self.M) * bX.flatten()
+        bY = (2/self.M) * bY.flatten()
+        bZ = (2/self.M) * bZ.flatten()
 
         # A = Ax = Ay = Az
         return A, A, A, bX, bY, bZ
@@ -140,6 +159,7 @@ if __name__ == '__main__':
     n_k = 2  # num_blendshapes
     n_m = 5  # num markers
     n_n = n_m * 3  # num_features (num_markers * 3)
+    dg_ref = np.random.rand(n_m, 3)
     dgk = np.random.rand(n_k, n_m, 3)
     dp = np.random.rand(n_k, n_n)
     print("dgk")
@@ -148,19 +168,20 @@ if __name__ == '__main__':
     print(dp)
 
     # create EMesh object
-    e_mesh = EMesh(dgk)
+    e_mesh = EMesh(dgk, dg_ref)
 
     # control compute e_mesh
     print("compute control e_mesh")
     dp = np.reshape(dp, (n_k, n_m, 3))
     emesh_ctrl = 0
     for k in range(n_k):
-        mesh = triangulate_vertices(dgk[k])
+        points = dg_ref + dgk[k]
+        mesh = triangulate_vertices(points)
         L = build_Laplacian(mesh, n_m).todense()
-
         for m in range(n_m):
             dv = dp[k, m] - dgk[k, m]
-            norm = np.linalg.norm(L[m, m] * dv)**2
+            sum_Lm = np.sum(np.power(L[m, :], 2))
+            norm = np.linalg.norm(sum_Lm * dv)**2
 
             emesh_ctrl += norm
 

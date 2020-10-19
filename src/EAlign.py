@@ -18,11 +18,12 @@ class EAlign:
 
     """
 
-    def __init__(self, tilda_ckf, uk, delta_af, delta_gk, delta_sk, alpha=0.01, beta=0.1):
+    def __init__(self, tilda_ckf, uk, delta_af, delta_gk, ref_sk, delta_sk, alpha=0.01, beta=0.1):
         self.tilda_ckf = tilda_ckf
         self.uk = uk
         self.delta_af = delta_af
         self.delta_gk = delta_gk
+        self.ref_sk = ref_sk
         self.delta_sk = delta_sk
 
         self.alpha = alpha
@@ -33,7 +34,7 @@ class EAlign:
 
         # declare energy functions
         self.e_match = EMatch(self.tilda_ckf, self.uk, self.delta_af)
-        self.e_mesh = EMesh(self.delta_gk)
+        self.e_mesh = EMesh(self.delta_gk, self.ref_sk)
         self.e_ceg = ECEG(self.delta_sk)
 
     def _eAlign(self, dp):

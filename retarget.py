@@ -27,16 +27,16 @@ if __name__ == '__main__':
     # define parameters
     ref_actor_pose = 'data/David_neutral_pose.npy'
     load_folder = "data/"
-    delta_p_name = "David_based_Louise_personalized_blendshapes_v2_NewEMesh_alpha_0.001.npy"
+    delta_p_name = "David_based_Louise_personalized_blendshapes_v2_RefEMesh_alpha_1.0_beta_2.0.npy"
     LdV_name = "LdV_louise.npy"
     load_sequence_folder = "D:/MoCap_Data/David/NewSession_labeled/"
     # sequence_name = "AngerTrail05.c3d"
-    # sequence_name = "HappyTrail01.c3d"
-    sequence_name = "FearTrail03.c3d"
+    sequence_name = "HappyTrail01.c3d"
+    # sequence_name = "FearTrail03.c3d"
     # sequence_name = "NeutralTrail14.c3d"
     num_markers = 45
     save_folder = "data/"
-    save_name = "weights_David2Louise_retarget_Fear_15000_v2_new_Emesh_alpha_0.001_nu_3"
+    save_name = "weights_David2Louise_retarget_Happy_5000_v2_RefEmesh_alpha_1.0_beta_1.0_mu_3.0_nu_5.0"
     # save_name = "weights_David2Louise_retarget_FearTrail"
 
     # get actor animation
@@ -104,25 +104,27 @@ if __name__ == '__main__':
     print()
 
     # ----------------------- ERetarget -------------------------
-    eRetarget = ERetarget(delta_p, LdV, mu=0.3, nu=3)
+    eRetarget = ERetarget(delta_p, LdV, mu=3.0, nu=5)
 
-    # weights = []
-    # for i in tqdm(range(500)):
-    # # for i in tqdm(range(1589, 1590)):
+    delta_af = delta_af[5000:7000]
+
+    weights = []
+    # # for i in tqdm(range(500)):
+    # for i in tqdm(range(5800, 7000)):
     # # for i in tqdm(range(num_frames)):
     #     eRetarget.set_af(delta_af[i])
-    #     A, b = eRetarget.get_dERetarget(L2=use_L2)
+    #     A, b = eRetarget.get_dERetarget()
     #     w = solve(A, b)
     #     weights.append(w)
 
     # multiprocessing
     p_get_w = partial(get_w, eRetarget=eRetarget, delta_af=delta_af)
-    weights = pool.map(p_get_w, tqdm(range(15000)))
+    weights = pool.map(p_get_w, tqdm(range(len(delta_af))))
     pool.close()
 
     print("[Retarget] shape weights", np.shape(weights))
 
-    # normalize weights
+    # get weights info
     weights = np.array(weights)
     max_weights = np.amax(weights)
     min_weights = np.amin(weights)
@@ -130,12 +132,9 @@ if __name__ == '__main__':
     min_index = np.argmin(weights)
     print("max weights", max_weights, "at", max_index)
     print("min weights", min_weights, "at", min_index)
-    # weights /= np.amax(weights)
 
     # save
     np.save(os.path.join(save_folder, save_name), weights)
     print("weights save as:", os.path.join(save_folder, save_name))
-    print("max weights", np.amax(weights), "at", max_index)
-    print("min weights", np.amin(weights), "at", min_index)
 
 

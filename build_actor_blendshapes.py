@@ -31,7 +31,7 @@ blendshape_mesh_list_name = "C:/Users/Michael/PycharmProjects/FacialRetargeting/
 load_folder = 'data/'
 sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertices_pos_v2.npy"
 save_folder = 'data/'
-save_file_name = "David_based_Louise_personalized_blendshapes_v2_NewEMesh_alpha_0.0001.npy"
+save_file_name = "David_based_Louise_personalized_blendshapes_v2_RefEMesh_alpha_1.0_beta_2.0.npy"
 neutral_pose_name = 'Louise_Neutral'
 ref_actor_pose = 'data/David_neutral_pose.npy'
 max_num_seq = None  # set to None if we want to use all the sequences
@@ -109,8 +109,8 @@ if do_plot:
     ax.set_zlabel('Z Label')
 
 if load_pre_processed:
-    delta_af = np.load("data/training_delta_af.npy")
-    tilda_ckf = np.load("data/training_tilda_ckf.npy")
+    delta_af = np.load("data/training_delta_af_v2.npy")
+    tilda_ckf = np.load("data/training_tilda_ckf_v2.npy")
 else:
     # load sequence
     af = load_training_frames(actor_recording_data_folder,
@@ -219,6 +219,9 @@ if do_plot:
     ax.set_ylabel('Y Label')
     ax.set_zlabel('Z Label')
 
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # 5) build personalized actor-specific blendshapes (delta_p)
 # reshape to match required dimensions
 delta_af = np.reshape(delta_af, (F, M*n_dim))
@@ -230,13 +233,16 @@ print("[dp] shape delta_af:", np.shape(delta_af))
 print("[dp] shape delta_gk:", np.shape(delta_gk))
 print("[dp] shape delta_sk", np.shape(sorted_delta_sk))
 # declare E_Align
-e_align = EAlign(tilda_ckf, uk, delta_af, delta_gk, sorted_delta_sk, alpha=0.0001)
+e_align = EAlign(tilda_ckf, uk, delta_af, delta_gk, ref_sk, sorted_delta_sk, alpha=1.0, beta=2.0)
 # compute personalized actor-specific blendshapes
 start = time.time()
 delta_p = e_align.compute_actor_specific_blendshapes(vectorized=False)
 print("[dp] Solved in:", time.time() - start)
 print("[dp] shape delta_p", np.shape(delta_p))
 print()
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 # 6) save delta_p ans sorted_mesh_list
 if save:
