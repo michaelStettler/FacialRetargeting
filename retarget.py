@@ -25,18 +25,26 @@ if __name__ == '__main__':
     #### missing: get blendshapes and marker data from maya here
 
     # define parameters
+    alpha = "0.1"
+    beta = "0.1"
+    mu = "0.3"
+    nu = "0.6"
+
     ref_actor_pose = 'data/David_neutral_pose.npy'
     load_folder = "data/"
-    delta_p_name = "David_based_Louise_personalized_blendshapes_v2_RefEMesh_alpha_1.0_beta_2.0.npy"
+    delta_p_name = "David_based_Louise_personalized_blendshapes_v2_RefEMesh_alpha_"+alpha+"_beta_"+beta+".npy"
     LdV_name = "LdV_louise.npy"
     load_sequence_folder = "D:/MoCap_Data/David/NewSession_labeled/"
     # sequence_name = "AngerTrail05.c3d"
-    sequence_name = "HappyTrail01.c3d"
+    # sequence_name = "HappyTrail01.c3d"
     # sequence_name = "FearTrail03.c3d"
+    sequence_name = "SadTrail01.c3d"
+    # sequence_name = "SurpriseTrail02.c3d"
+    # sequence_name = "DisgustTrail04.c3d"
     # sequence_name = "NeutralTrail14.c3d"
     num_markers = 45
     save_folder = "data/"
-    save_name = "weights_David2Louise_retarget_Happy_5000_v2_RefEmesh_alpha_1.0_beta_1.0_mu_3.0_nu_5.0"
+    save_name = "weights_David2Louise_retarget_Sad_6060_7000_v2_RefEmesh_alpha_"+alpha+"_beta_"+beta+"_mu_"+mu+"_nu_"+nu
     # save_name = "weights_David2Louise_retarget_FearTrail"
 
     # get actor animation
@@ -104,9 +112,9 @@ if __name__ == '__main__':
     print()
 
     # ----------------------- ERetarget -------------------------
-    eRetarget = ERetarget(delta_p, LdV, mu=3.0, nu=5)
+    eRetarget = ERetarget(delta_p, LdV, mu=float(mu), nu=float(nu))
 
-    delta_af = delta_af[5000:7000]
+    delta_af = delta_af[6060:7000]
 
     weights = []
     # # for i in tqdm(range(500)):

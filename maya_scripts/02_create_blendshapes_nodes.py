@@ -1,15 +1,13 @@
 import maya.cmds as cmds
 import numpy as np
 import os
+import json
 
-save_path = "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/"
-save_name = "mesh_name_list.npy"
-# select the folder containing all the blendshapes
-bs_group = "Louise_bs_GRP"
-base_mesh = "Louise"
+with open("C:/Users/Michael/PycharmProjects/FacialRetargeting/configs/David_to_Louise_v2.json") as f:
+    config = json.load(f)
 
 # get all blendshapes' meshes
-mesh_list = cmds.ls(bs_group, dag=1, type="mesh")  # get all blenshapes from the blenshape group folder
+mesh_list = cmds.ls(config['maya_bs_group'], dag=1, type="mesh")  # get all blenshapes from the blenshape group folder
 
 # remove names issue and make a list of string instead of that "maya" list [u"", u""]
 mesh_list_tuple = []
@@ -24,7 +22,7 @@ print("mesh_list_tuple")
 print(mesh_list_tuple)
 
 # create a blendshape nodes for every blendshape mesh
-cmds.blendShape(mesh_list_tuple, base_mesh, name="bs_node")
+cmds.blendShape(mesh_list_tuple, config['maya_base_mesh_name'], name="bs_node")
 
 # save mesh names
-np.save(os.path.join(save_path, save_name), mesh_list_tuple)
+np.save(os.path.join(config['python_data_path'], config['maya_bs_mesh_list']), mesh_list_tuple)

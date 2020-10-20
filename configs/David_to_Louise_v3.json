@@ -1,0 +1,10 @@
+{
+  "maya_path": "",
+  "maya_base_mesh_name": "Louise_bs_GRP",
+  "maya_bs_group": "Louise",
+  "python_data_path": "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/",
+  "maya_bs_mesh_list": "mesh_name_list.npy",
+  "vrts_pos": ["2912", "2718", "2590", "2591", "399", "205", "77", "78", "1779", "401", "1804", "2208", "4304", "2914", "23", "33", "1988", "1980", "2202", "4634", "4484", "1963", "2209", "4460", "1805", "2682", "2728", "169", "215", "2918", "2677", "2763", "405", "410", "250", "3266", "3255", "753", "742", "880", "3393"]
+
+
+}

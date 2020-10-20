@@ -1,6 +1,7 @@
 import numpy as np
 import time as time
 import os
+import json
 import matplotlib.pyplot as plt
 
 from utils.load_data import load_training_frames
@@ -25,25 +26,25 @@ run: python -m blendshape_transfer
 """
 np.set_printoptions(precision=4, linewidth=200, suppress=True)
 
-# define parameters
-actor_recording_data_folder = 'D:/MoCap_Data/David/NewSession_labeled/'
-blendshape_mesh_list_name = "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/mesh_name_list.npy"
-load_folder = 'data/'
-sparse_blendhsape_vertices_pos_name = "louise_to_David_markers_blendshape_vertices_pos_v2.npy"
-save_folder = 'data/'
-save_file_name = "David_based_Louise_personalized_blendshapes_v2_RefEMesh_alpha_1.0_beta_2.0.npy"
-neutral_pose_name = 'Louise_Neutral'
-ref_actor_pose = 'data/David_neutral_pose.npy'
+# load and define parameters
+with open("C:/Users/Michael/PycharmProjects/FacialRetargeting/configs/David_to_Louise_v2.json") as f:
+    config = json.load(f)
+alpha = int(config['alpha'])
+beta = int(config['beta'])
+print("[PARAMS] alpha:", alpha)
+print("[PARAMS] beta:", beta)
+print("[PARAMS] sk loaded:", config['vertices_pos_name'])
+
 max_num_seq = None  # set to None if we want to use all the sequences
 do_plot = True
 save = True
 load_pre_processed = True
 
 # load data
-mesh_list = np.load(blendshape_mesh_list_name).astype(str)
-sk = np.load(os.path.join(load_folder, sparse_blendhsape_vertices_pos_name))  # sparse representation of the blendshapes (vk)
+mesh_list = np.load(os.path.join(config['python_data_path'], config['maya_bs_mesh_list']+'.npy')).astype(str)
+sk = np.load(os.path.join(config['python_data_path'], config['vertices_pos_name']+'npy'))  # sparse representation of the blendshapes (vk)
 # get Neutral ref index and new cleaned mesh list
-cleaned_mesh_list, bs_index, ref_index = remove_neutral_blendshape(mesh_list, neutral_pose_name)
+cleaned_mesh_list, bs_index, ref_index = remove_neutral_blendshape(mesh_list, config['neutral_pose'])
 
 # get neutral (reference) blendshape and normalize it
 ref_sk, min_sk, max_sk = normalize_positions(np.copy(sk[ref_index]), return_min=True, return_max=True)
@@ -69,17 +70,12 @@ if np.shape(test_unique)[0] != np.shape(delta_sk)[0]:
     raise ValueError("delta_sk contains non unique entry! Check your index dictionary to build the sparse blendshape "
                      "(maya_scripts.03_extract_blendshapes_pos_and_obj)")
 
-# get actor animation
-template_labels = ['LeftBrow1', 'LeftBrow2', 'LeftBrow3', 'LeftBrow4', 'RightBrow1', 'RightBrow2', 'RightBrow3',
-                 'RightBrow4', 'Nose1', 'Nose2', 'Nose3', 'Nose4', 'Nose5', 'Nose6', 'Nose7', 'Nose8',
-                 'UpperMouth1', 'UpperMouth2', 'UpperMouth3', 'UpperMouth4', 'UpperMouth5', 'LowerMouth1',
-                 'LowerMouth2', 'LowerMouth3', 'LowerMouth4', 'LeftOrbi1', 'LeftOrbi2', 'RightOrbi1', 'RightOrbi2',
-                 'LeftCheek1', 'LeftCheek2', 'LeftCheek3', 'RightCheek1', 'RightCheek2', 'RightCheek3',
-                 'LeftJaw1', 'LeftJaw2', 'RightJaw1', 'RightJaw2', 'LeftEye1', 'RightEye1', 'Head1', 'Head2',
-                 'Head3', 'Head4']
+# ----------------------------------------------------------------------------------------------------------------------
+# get Actor Animation
+# ----------------------------------------------------------------------------------------------------------------------
 
 # load ref pose
-ref_actor_pose = np.load(ref_actor_pose)
+ref_actor_pose = np.load(os.path.join(config['python_data_path'], config['neutral_pose_positions']+'.npy'))
 # align sequence with the head markers
 head_markers = range(np.shape(ref_actor_pose)[0] - 4, np.shape(ref_actor_pose)[0] - 1)  # use only 3 markers
 ref_actor_pose = align_to_head_markers(ref_actor_pose, ref_idx=head_markers)
@@ -113,9 +109,9 @@ if load_pre_processed:
     tilda_ckf = np.load("data/training_tilda_ckf_v2.npy")
 else:
     # load sequence
-    af = load_training_frames(actor_recording_data_folder,
+    af = load_training_frames(config['mocap_folder'],
                               num_markers=45,
-                              template_labels=template_labels,
+                              template_labels=config['template_labels'],
                               max_num_seq=max_num_seq,
                               down_sample_factor=5)
     af = align_to_head_markers(af, ref_idx=head_markers)
@@ -233,7 +229,7 @@ print("[dp] shape delta_af:", np.shape(delta_af))
 print("[dp] shape delta_gk:", np.shape(delta_gk))
 print("[dp] shape delta_sk", np.shape(sorted_delta_sk))
 # declare E_Align
-e_align = EAlign(tilda_ckf, uk, delta_af, delta_gk, ref_sk, sorted_delta_sk, alpha=1.0, beta=2.0)
+e_align = EAlign(tilda_ckf, uk, delta_af, delta_gk, ref_sk, sorted_delta_sk, alpha=alpha, beta=beta)
 # compute personalized actor-specific blendshapes
 start = time.time()
 delta_p = e_align.compute_actor_specific_blendshapes(vectorized=False)
@@ -246,8 +242,9 @@ print()
 
 # 6) save delta_p ans sorted_mesh_list
 if save:
-    np.save(save_folder + save_file_name, delta_p)
-    np.save(save_folder + 'sorted_mesh_name_list', sorted_mesh_list)
+    saving_name = config['dp_name']+'_alpha_'+config['alpha']+'_beta_'+config['beta']
+    np.save(os.path.join(config['python_data_path'], saving_name), delta_p)
+    np.save(os.path.join(config['python_data_path'], config['sorted_maya_bs_mesh_list']), sorted_mesh_list)
     print("[save] saved delta_pk (actor specifik blendshapes), shape:", np.shape(delta_p))
     print("[save] saved sorted_mesh_list, shape:", np.shape(delta_p))
 
