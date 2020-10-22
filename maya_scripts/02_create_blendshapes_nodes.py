@@ -22,7 +22,7 @@ print("mesh_list_tuple")
 print(mesh_list_tuple)
 
 # create a blendshape nodes for every blendshape mesh
-cmds.blendShape(mesh_list_tuple, config['maya_base_mesh_name'], name="bs_node")
+cmds.blendShape(mesh_list_tuple, config['maya_base_mesh_name'], name=config['blendshape_node'])
 
 # save mesh names
 np.save(os.path.join(config['python_data_path'], config['maya_bs_mesh_list']), mesh_list_tuple)

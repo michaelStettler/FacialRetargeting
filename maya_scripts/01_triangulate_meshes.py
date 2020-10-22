@@ -1,15 +1,14 @@
 import maya.cmds as cmds
+import json
 
-# get base mesh
-base_mesh = 'Louise'
+with open("C:/Users/Michael/PycharmProjects/FacialRetargeting/configs/David_to_Louise_v2.json") as f:
+    config = json.load(f)
+
 # triangulate base mesh
-cmds.polyTriangulate(base_mesh)
-
-# select the folder containing all the blendshapes
-bs_groupe = "Louise_bs_GRP"
+cmds.polyTriangulate(config['maya_base_mesh_name'])
 
 # get all blendshapes' meshes
-mesh_list = cmds.ls(bs_groupe, dag=1, type="mesh")  # get all blenshapes from blenshape group
+mesh_list = cmds.ls(config['maya_bs_group'], dag=1, type="mesh")  # get all blenshapes from blenshape group
 
 # triangualte each blendshape mesh
 for mesh in mesh_list:

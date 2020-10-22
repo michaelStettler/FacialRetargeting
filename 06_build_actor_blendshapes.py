@@ -29,6 +29,7 @@ np.set_printoptions(precision=4, linewidth=200, suppress=True)
 # load and define parameters
 with open("C:/Users/Michael/PycharmProjects/FacialRetargeting/configs/David_to_Louise_v2.json") as f:
     config = json.load(f)
+
 alpha = int(config['alpha'])
 beta = int(config['beta'])
 print("[PARAMS] alpha:", alpha)
@@ -110,7 +111,7 @@ if load_pre_processed:
 else:
     # load sequence
     af = load_training_frames(config['mocap_folder'],
-                              num_markers=45,
+                              num_markers=int(config['num_markers']),
                               template_labels=config['template_labels'],
                               max_num_seq=max_num_seq,
                               down_sample_factor=5)

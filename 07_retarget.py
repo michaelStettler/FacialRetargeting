@@ -2,6 +2,7 @@ import os
 import numpy as np
 from tqdm import tqdm
 from scipy.linalg import solve
+import json
 
 import multiprocessing as mp
 from functools import partial
@@ -24,17 +25,20 @@ if __name__ == '__main__':
     pool = mp.Pool(processes=4)
     #### missing: get blendshapes and marker data from maya here
 
-    # define parameters
-    alpha = "0.1"
-    beta = "0.1"
+    # load and define parameters
+    with open("C:/Users/Michael/PycharmProjects/FacialRetargeting/configs/David_to_Louise_v2.json") as f:
+        config = json.load(f)
+
+    alpha = int(config['alpha'])
+    beta = int(config['beta'])
+    print("[PARAMS] alpha:", alpha)
+    print("[PARAMS] beta:", beta)
     mu = "0.3"
     nu = "0.6"
+    start = 6060
+    end = 7000
 
-    ref_actor_pose = 'data/David_neutral_pose.npy'
-    load_folder = "data/"
-    delta_p_name = "David_based_Louise_personalized_blendshapes_v2_RefEMesh_alpha_"+alpha+"_beta_"+beta+".npy"
-    LdV_name = "LdV_louise.npy"
-    load_sequence_folder = "D:/MoCap_Data/David/NewSession_labeled/"
+    delta_p_name = config['dp_name']+'_alpha_'+config['alpha']+'_beta_'+config['beta']+".npy"
     # sequence_name = "AngerTrail05.c3d"
     # sequence_name = "HappyTrail01.c3d"
     # sequence_name = "FearTrail03.c3d"
@@ -42,31 +46,28 @@ if __name__ == '__main__':
     # sequence_name = "SurpriseTrail02.c3d"
     # sequence_name = "DisgustTrail04.c3d"
     # sequence_name = "NeutralTrail14.c3d"
-    num_markers = 45
-    save_folder = "data/"
-    save_name = "weights_David2Louise_retarget_Sad_6060_7000_v2_RefEmesh_alpha_"+alpha+"_beta_"+beta+"_mu_"+mu+"_nu_"+nu
-    # save_name = "weights_David2Louise_retarget_FearTrail"
+    if start is not None:
+        save_name = "weights_David2Louise_retarget_"+sequence_name+"_s"+str(start)+"_alpha_"+alpha+"_beta_"+beta+"_mu_"+mu+"_nu_"+nu
+        if end is not None:
+            save_name = "weights_David2Louise_retarget_"+sequence_name+"_" + str(
+                start) + "_e"+str(end)+"_alpha_" + alpha + "_beta_" + beta + "_mu_" + mu + "_nu_" + nu
+    elif end is not None:
+        save_name = "weights_David2Louise_retarget_"+sequence_name+"_e" + str(
+            end) + "_alpha_" + alpha + "_beta_" + beta + "_mu_" + mu + "_nu_" + nu
+    else:
+        save_name = "weights_David2Louise_retarget_"+sequence_name+"_alpha_" + alpha + "_beta_" + beta + "_mu_" + mu + "_nu_" + nu
 
     # get actor animation
-    template_labels = ['LeftBrow1', 'LeftBrow2', 'LeftBrow3', 'LeftBrow4', 'RightBrow1', 'RightBrow2', 'RightBrow3',
-                       'RightBrow4', 'Nose1', 'Nose2', 'Nose3', 'Nose4', 'Nose5', 'Nose6', 'Nose7', 'Nose8',
-                       'UpperMouth1', 'UpperMouth2', 'UpperMouth3', 'UpperMouth4', 'UpperMouth5', 'LowerMouth1',
-                       'LowerMouth2', 'LowerMouth3', 'LowerMouth4', 'LeftOrbi1', 'LeftOrbi2', 'RightOrbi1',
-                       'RightOrbi2',
-                       'LeftCheek1', 'LeftCheek2', 'LeftCheek3', 'RightCheek1', 'RightCheek2', 'RightCheek3',
-                       'LeftJaw1', 'LeftJaw2', 'RightJaw1', 'RightJaw2', 'LeftEye1', 'RightEye1', 'Head1', 'Head2',
-                       'Head3', 'Head4']
-
     # ----------------------- data -------------------------
     # load data
-    delta_p = np.load(os.path.join(load_folder, delta_p_name))
+    delta_p = np.load(os.path.join(config['python_data_path'], delta_p_name))
     print("max delta_p", np.amax(delta_p))
-    LdV = np.load(os.path.join(load_folder, LdV_name))
+    LdV = np.load(os.path.join(config['python_data_path'], config['LdV_name']+'.npy'))
     # LdV /= np.linalg.norm(LdV)  # todo normalize dV and not LdV?
     print("max ldv", np.amax(LdV))
 
     # load reference actor pose
-    ref_actor_pose = np.load(ref_actor_pose)
+    ref_actor_pose = np.load(os.path.join(config['python_data_path'], config['neutral_pose_positions']+'.npy'))
     # align sequence with the head markers
     head_markers = range(np.shape(ref_actor_pose)[0] - 4, np.shape(ref_actor_pose)[0] - 1)  # use only 3 markers
     ref_actor_pose = align_to_head_markers(ref_actor_pose, ref_idx=head_markers)
@@ -77,7 +78,7 @@ if __name__ == '__main__':
     ref_actor_pose, min_af, max_af = normalize_positions(ref_actor_pose, return_min=True, return_max=True)
 
     # load sequence to retarget
-    af = load_training_seq(load_sequence_folder, sequence_name, num_markers, template_labels=template_labels)
+    af = load_training_seq(config['mocap_folder'], sequence_name, config['num_markers'], template_labels=config['template_labels'])
     af = align_to_head_markers(af, ref_idx=head_markers)
     af = af[:, :-4, :]  # remove HEAD markers
     # modify axis from xyz to xzy to match the scatter blendshape axis orders
@@ -114,7 +115,12 @@ if __name__ == '__main__':
     # ----------------------- ERetarget -------------------------
     eRetarget = ERetarget(delta_p, LdV, mu=float(mu), nu=float(nu))
 
-    delta_af = delta_af[6060:7000]
+    if start is not None:
+        delta_af = delta_af[start:]
+        if end is not None:
+            delta_af = delta_af[start:end]
+    elif end is not None:
+        delta_af = delta_af[:end]
 
     weights = []
     # # for i in tqdm(range(500)):
@@ -142,7 +148,7 @@ if __name__ == '__main__':
     print("min weights", min_weights, "at", min_index)
 
     # save
-    np.save(os.path.join(save_folder, save_name), weights)
-    print("weights save as:", os.path.join(save_folder, save_name))
+    np.save(os.path.join(config['python_data_path'], save_name), weights)
+    print("weights save as:", os.path.join(config['python_data_path'], save_name))
 
 

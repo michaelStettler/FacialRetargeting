@@ -1,13 +1,13 @@
 {
   "maya_path": "",
-  "maya_base_mesh_name": "Louise_bs_GRP",
-  "maya_bs_group": "Louise",
+  "maya_base_mesh_name": "Louise",
+  "maya_bs_group": "Louise_bs_GRP",
+  "blendshape_node": "bs_node",
   "python_data_path": "C:/Users/Michael/PycharmProjects/FacialRetargeting/data",
   "python_save_path_bsObj": "C:/Users/Michael/PycharmProjects/FacialRetargeting/data/blendshapes_obj",
   "maya_bs_mesh_list": "mesh_name_list",
   "sorted_maya_bs_mesh_list": "sorted_mesh_name_list",
   "neutral_pose": "Louise_Neutral",
-  "neutral_pose_positions": "David_neutral_pose",
   "vrts_pos": [
     "2912",
     "2718",
@@ -100,6 +100,11 @@
   "vertices_pos_name": "louise_to_David_markers_blendshape_vertices_pos_v2",
   "dp_name": "David_based_Louise_personalized_blendshapes_v2",
   "mocap_folder": "D:/MoCap_Data/David/NewSession_labeled/",
+  "neutral_sequence": "NeutralTrail14.c3d",
+  "neutral_frame": "900",
+  "neutral_pose_positions": "David_neutral_pose",
+  "num_markers": "45",
   "alpha": "1.0",
-  "beta": "1.0"
+  "beta": "1.0",
+  "LdV_name": "LdV_louise_norm"
 }
